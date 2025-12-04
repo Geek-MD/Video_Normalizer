@@ -512,8 +512,6 @@ class VideoProcessor:
                 # Determine the output path and name
                 video_dir = os.path.dirname(video_path)
                 video_basename = os.path.basename(video_path)
-                video_name_without_ext = os.path.splitext(video_basename)[0]
-                video_ext = os.path.splitext(video_basename)[1]
                 
                 if output_path:
                     # Use specified output directory
