@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -144,7 +145,6 @@ class VideoProcessor:
 
             # Parse the output for video stream information
             # Look for pattern like "Stream #0:0: Video: ... 1920x1080"
-            import re
             pattern = r"Stream.*Video.*?(\d{2,5})x(\d{2,5})"
             match = re.search(pattern, output)
 
