@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Video Normalizer",
+        "description": "This integration requires the Downloader integration to be installed and configured. Video Normalizer will use the same download directory configured in Downloader.\n\nFor more information about Downloader, visit: {downloader_url}",
+        "data": {}
+      }
+    },
+    "error": {
+      "downloader_not_installed": "The Downloader integration is not installed or configured. Please install and configure Downloader before setting up Video Normalizer.",
+      "downloader_not_configured": "The Downloader integration is not properly configured. Please verify the Downloader configuration.",
+      "unknown": "Unexpected error occurred. Please check the logs for more information."
+    },
+    "abort": {
+      "already_configured": "Video Normalizer is already configured"
+    }
+  }
+}
