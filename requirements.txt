@@ -1,5 +1,5 @@
 # --- Type stubs and minimal deps for Home Assistant development ---
-homeassistant-stubs==2025.1.4
+homeassistant-stubs==2024.12.5
 
 # --- Dev tools ---
 mypy==1.10.0
