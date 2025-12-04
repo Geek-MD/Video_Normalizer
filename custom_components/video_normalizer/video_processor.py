@@ -6,8 +6,6 @@ import json
 import logging
 import os
 import re
-import subprocess
-from pathlib import Path
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -315,14 +313,12 @@ class VideoProcessor:
             new_height = int(width / target_aspect_ratio)
             pad_height = new_height - height
             pad_top = pad_height // 2
-            pad_bottom = pad_height - pad_top
             filter_complex = f"pad={width}:{new_height}:0:{pad_top}:black"
         else:
             # Video is taller, add padding left/right
             new_width = int(height * target_aspect_ratio)
             pad_width = new_width - width
             pad_left = pad_width // 2
-            pad_right = pad_width - pad_left
             filter_complex = f"pad={new_width}:{height}:{pad_left}:0:black"
 
         # Create output path with temp suffix
@@ -401,6 +397,8 @@ class VideoProcessor:
         current_height = info["height"]
 
         # Calculate target dimensions maintaining aspect ratio if needed
+        new_width: int
+        new_height: int
         if target_width and target_height:
             new_width = target_width
             new_height = target_height
@@ -408,6 +406,8 @@ class VideoProcessor:
             new_width = target_width
             new_height = int(target_width / (current_width / current_height))
         else:  # target_height only
+            if target_height is None:
+                raise ValueError("Either target_width or target_height must be provided")
             new_height = target_height
             new_width = int(target_height * (current_width / current_height))
 
@@ -490,7 +490,7 @@ class VideoProcessor:
         Returns:
             Dictionary with processing results
         """
-        results = {
+        results: dict[str, Any] = {
             "video_path": video_path,
             "success": False,
             "operations": {},

@@ -7,9 +7,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, DOWNLOADER_DOMAIN, CONF_DOWNLOAD_DIR
 
@@ -43,7 +42,7 @@ class DownloaderNotConfigured(Exception):
     """Error to indicate Downloader integration is not configured."""
 
 
-class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]  # domain parameter is handled by ConfigFlow metaclass
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1

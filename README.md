@@ -97,3 +97,10 @@ This integration requires:
 - The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured in Home Assistant
 - FFmpeg to be available in the Home Assistant environment (typically pre-installed)
 
+---
+
+<div align="center">
+  
+💻 **Proudly developed with GitHub Copilot** 🚀
+
+</div>
