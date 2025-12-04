@@ -8,6 +8,24 @@ This integration requires the [Downloader](https://www.home-assistant.io/integra
 
 ## Installation
 
+### HACS (Recommended)
+
+1. Open HACS in your Home Assistant instance
+2. Click on "Integrations"
+3. Click the three dots in the top right corner and select "Custom repositories"
+4. Add the repository URL: `https://github.com/Geek-MD/Video_Normalizer`
+5. Select "Integration" as the category
+6. Click "Add"
+7. Search for "Video Normalizer" in HACS
+8. Click "Download"
+9. Restart Home Assistant
+10. Go to Configuration > Integrations
+11. Click the + button to add a new integration
+12. Search for "Video Normalizer"
+13. Follow the configuration steps
+
+### Manual Installation
+
 1. Copy the `custom_components/video_normalizer` directory to your Home Assistant `custom_components` directory
 2. Restart Home Assistant
 3. Go to Configuration > Integrations
