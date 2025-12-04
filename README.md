@@ -1,6 +1,6 @@
 # Video Normalizer
 
-Home Assistant custom integration that normalizes downloaded videos' aspect ratios using the Downloader integration and emits automation-friendly events on success or failure.
+Home Assistant custom integration that normalizes aspect ratio of videos downloaded using the Downloader integration.
 
 ## Requirements
 
