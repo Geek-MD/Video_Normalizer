@@ -30,7 +30,7 @@ async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]
     # Method 1: Check hass.data[DOWNLOADER_DOMAIN] (YAML-based integration)
     downloader_config = hass.data.get(DOWNLOADER_DOMAIN)
     if downloader_config:
-        _LOGGER.debug("Found downloader config in hass.data[%s]: %s", DOWNLOADER_DOMAIN, downloader_config)
+        _LOGGER.debug("Found downloader config in hass.data[%s] (type: %s)", DOWNLOADER_DOMAIN, type(downloader_config).__name__)
         if isinstance(downloader_config, dict):
             download_dir = downloader_config.get("download_dir")
         else:
@@ -42,7 +42,7 @@ async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]
     if not download_dir:
         _LOGGER.debug("Checking config entries for downloader integration")
         for entry in hass.config_entries.async_entries(DOWNLOADER_DOMAIN):
-            _LOGGER.debug("Found downloader config entry: %s", entry.data)
+            _LOGGER.debug("Found downloader config entry with keys: %s", list(entry.data.keys()))
             if "download_dir" in entry.data:
                 download_dir = entry.data["download_dir"]
                 break
@@ -55,15 +55,14 @@ async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]
             download_dir = downloader_config
     
     if not download_dir:
-        _LOGGER.error(
+        _LOGGER.debug(
             "Downloader integration is loaded but no download_dir found. "
-            "Available hass.data keys: %s, Config entries: %s",
-            list(hass.data.keys()),
-            [entry.domain for entry in hass.config_entries.async_entries()]
+            "Available integrations: %s",
+            [domain for domain in hass.config.components if "download" in domain.lower()]
         )
         raise DownloaderNotConfigured("Downloader integration is not properly configured")
     
-    _LOGGER.info("Successfully retrieved download directory from Downloader: %s", download_dir)
+    _LOGGER.info("Successfully retrieved download directory from Downloader")
     return {"download_dir": download_dir}
 
 
