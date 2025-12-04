@@ -25,6 +25,9 @@ SERVICE_NORMALIZE_VIDEO = "normalize_video"
 SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
     {
         vol.Required("video_path"): cv.string,
+        vol.Optional("output_path"): cv.string,
+        vol.Optional("output_name"): cv.string,
+        vol.Optional("overwrite", default=False): cv.boolean,
         vol.Optional("normalize_aspect", default=True): cv.boolean,
         vol.Optional("generate_thumbnail", default=True): cv.boolean,
         vol.Optional("resize_width"): cv.positive_int,
@@ -53,6 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_normalize_video(call: ServiceCall) -> None:
         """Handle the normalize_video service call."""
         video_path = call.data["video_path"]
+        output_path = call.data.get("output_path")
+        output_name = call.data.get("output_name")
+        overwrite = call.data.get("overwrite", False)
         normalize_aspect = call.data.get("normalize_aspect", True)
         generate_thumbnail = call.data.get("generate_thumbnail", True)
         resize_width = call.data.get("resize_width")
@@ -77,6 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             result = await video_processor.process_video(
                 video_path=video_path,
+                output_path=output_path,
+                output_name=output_name,
+                overwrite=overwrite,
                 normalize_aspect=normalize_aspect,
                 generate_thumbnail=generate_thumbnail,
                 resize_width=resize_width,

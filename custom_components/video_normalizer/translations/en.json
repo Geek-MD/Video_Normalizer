@@ -2,21 +2,19 @@
   "config": {
     "step": {
       "user": {
-        "title": "Video Normalizer",
-        "description": "This integration requires the Downloader integration to be installed and configured. Video Normalizer will use the same download directory configured in Downloader.\n\nFor more information about Downloader, visit: {downloader_url}",
+        "title": "Video Normalizer - Welcome",
+        "description": "**Recommendation:** To get the most out of this integration, it is recommended to have the **Downloader** integration installed ({has_downloader} Installed).\n\nDownloader allows automatic file downloads, which complements perfectly with Video Normalizer to process downloaded videos.\n\nYou can install Downloader from: {downloader_url}\n\nPress **Submit** to continue with the configuration.",
         "data": {}
       },
-      "manual": {
-        "title": "Manual Configuration - Video Normalizer",
-        "description": "Could not automatically detect Downloader configuration. Please manually enter the download directory.\n\nThis should be the same directory configured in the Downloader integration.\n\nFor more information about Downloader, visit: {downloader_url}",
+      "configure": {
+        "title": "Configuration - Video Normalizer",
+        "description": "Configure the download directory where videos to be processed are located.\n\nIf you have Downloader installed, this field will be pre-filled automatically with the directory configured in Downloader.\n\nFor more information about Downloader, visit: {downloader_url}",
         "data": {
           "download_dir": "Download Directory"
         }
       }
     },
     "error": {
-      "downloader_not_installed": "The Downloader integration is not installed or configured. Please install and configure Downloader before setting up Video Normalizer.",
-      "downloader_not_configured": "The Downloader integration is not properly configured. Please verify the Downloader configuration.",
       "download_dir_required": "Download directory is required.",
       "unknown": "Unexpected error occurred. Please check the logs for more information."
     },

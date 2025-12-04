@@ -8,11 +8,11 @@
 
 # Video Normalizer
 
-Home Assistant custom integration that normalizes aspect ratio of videos downloaded using the Downloader integration.
+Home Assistant custom integration that normalizes aspect ratio of videos and provides flexible video processing capabilities.
 
 ## Requirements
 
-This integration requires the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured in Home Assistant. Video Normalizer uses the same download directory as configured in the Downloader integration.
+This integration works independently but is recommended to be used with the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration for automatic video downloads. If Downloader is installed, Video Normalizer will auto-detect and use its download directory configuration.
 
 ## Installation
 
@@ -41,19 +41,19 @@ This integration requires the [Downloader](https://www.home-assistant.io/integra
 5. Search for "Video Normalizer"
 6. Follow the configuration steps
 
-**Note:** If the Downloader integration is not installed or configured, the setup process will alert you and abort the configuration.
+**Note:** The setup wizard will recommend installing the Downloader integration if it's not already installed, but it's not required. If Downloader is installed, its configuration will be automatically detected.
 
 ## Configuration
 
-The integration will automatically detect and use the download directory configured in the Downloader integration. No additional configuration is required.
+During setup, you'll need to configure the download directory where videos are located. If the Downloader integration is installed, this field will be automatically pre-filled with its configured directory.
 
 ## Features
 
-- Automatic detection of Downloader integration
-- Uses the same download directory as Downloader
-- **Automatic aspect ratio normalization** for all downloaded videos to prevent square or distorted previews in Telegram and mobile players
+- Optional Downloader integration detection and auto-configuration
+- **Flexible output path and naming** - specify custom output directory and filename, or overwrite the original
+- **Automatic aspect ratio normalization** for all videos to prevent square or distorted previews in Telegram and mobile players
 - **Automatic thumbnail generation and embedding** to force Telegram to use the correct video preview
-- **Optional video resizing subprocess** (width/height) if dimensions differ
+- **Optional video resizing** (width/height) if dimensions differ
 - **Robust detection of video dimensions** using ffprobe (JSON) with ffmpeg -i fallback
 - Emits automation-friendly events on video processing success or failure
 - Easy setup through the Home Assistant UI
@@ -66,6 +66,9 @@ Process a video file with normalization operations.
 
 **Parameters:**
 - `video_path` (required): Path to the video file to process
+- `output_path` (optional): Directory where the processed video will be saved (defaults to same directory as input)
+- `output_name` (optional): Name for the output video file (defaults to same name as input)
+- `overwrite` (optional, default: false): Whether to overwrite the original file
 - `normalize_aspect` (optional, default: true): Whether to normalize the aspect ratio to 16:9
 - `generate_thumbnail` (optional, default: true): Whether to generate and embed a thumbnail
 - `resize_width` (optional): Target width for resizing (maintains aspect ratio if only one dimension specified)
@@ -102,8 +105,8 @@ The service fires events that can be used in automations:
 ## Requirements
 
 This integration requires:
-- The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured in Home Assistant
 - FFmpeg to be available in the Home Assistant environment (typically pre-installed)
+- Recommended: The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration for automatic video downloads (optional)
 
 ---
 
