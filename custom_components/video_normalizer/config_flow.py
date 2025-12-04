@@ -68,7 +68,7 @@ async def detect_downloader_integration(hass: HomeAssistant) -> dict[str, Any] |
     return {"download_dir": download_dir}
 
 
-class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1
