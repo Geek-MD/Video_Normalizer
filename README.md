@@ -67,7 +67,7 @@ automation:
           generate_thumbnail: true
 ```
 
-**Events:**
+## Events:
 
 The service fires events that can be used in automations:
 - `video_normalizer_video_processing_success`: Fired when video processing completes successfully
