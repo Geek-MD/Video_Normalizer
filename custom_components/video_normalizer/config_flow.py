@@ -50,16 +50,18 @@ async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]
     # Method 3: Check if data is stored under a different key structure
     if not download_dir and downloader_config:
         _LOGGER.debug("Attempting to extract download_dir from alternative data structures")
-        # Try if it's stored directly as a string
+        # Some integrations may store the download directory as a string value directly
+        # This is uncommon but we check for it as a fallback
         if isinstance(downloader_config, str):
             download_dir = downloader_config
     
     if not download_dir:
-        _LOGGER.debug(
-            "Downloader integration is loaded but no download_dir found. "
-            "Available integrations: %s",
-            [domain for domain in hass.config.components if "download" in domain.lower()]
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Downloader integration is loaded but no download_dir found. "
+                "Available integrations: %s",
+                [domain for domain in hass.config.components if "download" in domain.lower()]
+            )
         raise DownloaderNotConfigured("Downloader integration is not properly configured")
     
     _LOGGER.info("Successfully retrieved download directory from Downloader")
