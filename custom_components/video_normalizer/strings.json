@@ -2,26 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "Video Normalizer",
-        "description": "Esta integración requiere que la integración Downloader esté instalada y configurada. Video Normalizer utilizará el mismo directorio de descarga configurado en Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
+        "title": "Video Normalizer - Welcome",
+        "description": "**Recommendation:** To get the most out of this integration, it is recommended to have the **Downloader** integration installed ({has_downloader} Installed).\n\nDownloader allows automatic file downloads, which complements perfectly with Video Normalizer to process downloaded videos.\n\nYou can install Downloader from: {downloader_url}\n\nPress **Submit** to continue with the configuration.",
         "data": {}
       },
-      "manual": {
-        "title": "Configuración Manual - Video Normalizer",
-        "description": "No se pudo detectar automáticamente la configuración de Downloader. Por favor, ingresa manualmente el directorio de descargas.\n\nEste debe ser el mismo directorio configurado en la integración Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
+      "configure": {
+        "title": "Configuration - Video Normalizer",
+        "description": "Configure the download directory where videos to be processed are located.\n\nIf you have Downloader installed, this field will be pre-filled automatically with the directory configured in Downloader.\n\nFor more information about Downloader, visit: {downloader_url}",
         "data": {
-          "download_dir": "Directorio de Descargas"
+          "download_dir": "Download Directory"
         }
       }
     },
     "error": {
-      "downloader_not_installed": "La integración Downloader no está instalada o configurada. Por favor, instala y configura Downloader antes de configurar Video Normalizer.",
-      "downloader_not_configured": "La integración Downloader no está correctamente configurada. Por favor, verifica la configuración de Downloader.",
-      "download_dir_required": "El directorio de descargas es requerido.",
-      "unknown": "Error inesperado. Por favor, verifica los logs para más información."
+      "download_dir_required": "Download directory is required.",
+      "unknown": "Unexpected error occurred. Please check the logs for more information."
     },
     "abort": {
-      "already_configured": "Video Normalizer ya está configurado"
+      "already_configured": "Video Normalizer is already configured"
     }
   }
 }

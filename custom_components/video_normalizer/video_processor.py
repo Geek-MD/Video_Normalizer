@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import shutil
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,19 +211,17 @@ class VideoProcessor:
             _LOGGER.error("Error generating thumbnail: %s", err)
             return False
 
-    async def embed_thumbnail(self, video_path: str, thumbnail_path: str) -> bool:
+    async def embed_thumbnail(self, video_path: str, output_video_path: str, thumbnail_path: str) -> bool:
         """Embed thumbnail into video file metadata.
         
         Args:
-            video_path: Path to the video file
+            video_path: Path to the input video file
+            output_video_path: Path where the output video will be saved
             thumbnail_path: Path to the thumbnail image
             
         Returns:
             True if thumbnail was embedded successfully
         """
-        # Create output path with temp suffix
-        output_path = f"{video_path}.tmp"
-
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -232,7 +231,7 @@ class VideoProcessor:
             "-c", "copy",
             "-disposition:v:1", "attached_pic",
             "-y",
-            output_path,
+            output_video_path,
         ]
 
         try:
@@ -247,33 +246,32 @@ class VideoProcessor:
                 _LOGGER.error(
                     "Failed to embed thumbnail: %s", stderr.decode()
                 )
-                # Clean up temp file if it exists
-                if os.path.exists(output_path):
-                    os.remove(output_path)
+                # Clean up output file if it exists
+                if os.path.exists(output_video_path):
+                    os.remove(output_video_path)
                 return False
 
-            # Replace original with the new file
-            os.replace(output_path, video_path)
-            _LOGGER.debug("Thumbnail embedded successfully into %s", video_path)
+            _LOGGER.debug("Thumbnail embedded successfully")
             return True
 
         except Exception as err:
             _LOGGER.error("Error embedding thumbnail: %s", err)
-            # Clean up temp file if it exists
-            if os.path.exists(output_path):
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
                 try:
-                    os.remove(output_path)
+                    os.remove(output_video_path)
                 except Exception:
                     pass
             return False
 
     async def normalize_aspect_ratio(
-        self, video_path: str, target_aspect_ratio: float | None = None
+        self, video_path: str, output_video_path: str, target_aspect_ratio: float | None = None
     ) -> bool:
         """Normalize video aspect ratio to prevent square or distorted previews.
         
         Args:
-            video_path: Path to the video file
+            video_path: Path to the input video file
+            output_video_path: Path where the output video will be saved
             target_aspect_ratio: Target aspect ratio (default: 16/9 = 1.777...)
             
         Returns:
@@ -321,9 +319,6 @@ class VideoProcessor:
             pad_left = pad_width // 2
             filter_complex = f"pad={new_width}:{height}:{pad_left}:0:black"
 
-        # Create output path with temp suffix
-        output_path = f"{video_path}.tmp"
-
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -333,7 +328,7 @@ class VideoProcessor:
             "-crf", "23",
             "-c:a", "copy",
             "-y",
-            output_path,
+            output_video_path,
         ]
 
         try:
@@ -348,34 +343,33 @@ class VideoProcessor:
                 _LOGGER.error(
                     "Failed to normalize aspect ratio: %s", stderr.decode()
                 )
-                # Clean up temp file if it exists
-                if os.path.exists(output_path):
-                    os.remove(output_path)
+                # Clean up output file if it exists
+                if os.path.exists(output_video_path):
+                    os.remove(output_video_path)
                 return False
 
-            # Replace original with the new file
-            os.replace(output_path, video_path)
-            _LOGGER.info("Aspect ratio normalized successfully for %s", video_path)
+            _LOGGER.info("Aspect ratio normalized successfully")
             return True
 
         except Exception as err:
             _LOGGER.error("Error normalizing aspect ratio: %s", err)
-            # Clean up temp file if it exists
-            if os.path.exists(output_path):
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
                 try:
-                    os.remove(output_path)
+                    os.remove(output_video_path)
                 except Exception:
                     pass
             return False
 
     async def resize_video(
-        self, video_path: str, target_width: int | None = None, 
+        self, video_path: str, output_video_path: str, target_width: int | None = None, 
         target_height: int | None = None
     ) -> bool:
         """Resize video to specified dimensions.
         
         Args:
-            video_path: Path to the video file
+            video_path: Path to the input video file
+            output_video_path: Path where the output video will be saved
             target_width: Target width (None to maintain aspect ratio)
             target_height: Target height (None to maintain aspect ratio)
             
@@ -421,9 +415,6 @@ class VideoProcessor:
             current_width, current_height, new_width, new_height
         )
 
-        # Create output path with temp suffix
-        output_path = f"{video_path}.tmp"
-
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -433,7 +424,7 @@ class VideoProcessor:
             "-crf", "23",
             "-c:a", "copy",
             "-y",
-            output_path,
+            output_video_path,
         ]
 
         try:
@@ -448,22 +439,20 @@ class VideoProcessor:
                 _LOGGER.error(
                     "Failed to resize video: %s", stderr.decode()
                 )
-                # Clean up temp file if it exists
-                if os.path.exists(output_path):
-                    os.remove(output_path)
+                # Clean up output file if it exists
+                if os.path.exists(output_video_path):
+                    os.remove(output_video_path)
                 return False
 
-            # Replace original with the new file
-            os.replace(output_path, video_path)
-            _LOGGER.info("Video resized successfully: %s", video_path)
+            _LOGGER.info("Video resized successfully")
             return True
 
         except Exception as err:
             _LOGGER.error("Error resizing video: %s", err)
-            # Clean up temp file if it exists
-            if os.path.exists(output_path):
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
                 try:
-                    os.remove(output_path)
+                    os.remove(output_video_path)
                 except Exception:
                     pass
             return False
@@ -471,6 +460,9 @@ class VideoProcessor:
     async def process_video(
         self,
         video_path: str,
+        output_path: str | None = None,
+        output_name: str | None = None,
+        overwrite: bool = False,
         normalize_aspect: bool = True,
         generate_thumbnail: bool = True,
         resize_width: int | None = None,
@@ -481,6 +473,9 @@ class VideoProcessor:
         
         Args:
             video_path: Path to the video file
+            output_path: Optional output directory path (defaults to same directory as input)
+            output_name: Optional output filename (defaults to same name as input)
+            overwrite: Whether to overwrite the original file
             normalize_aspect: Whether to normalize aspect ratio
             generate_thumbnail: Whether to generate and embed thumbnail
             resize_width: Optional target width for resizing
@@ -510,22 +505,58 @@ class VideoProcessor:
                 "aspect_ratio": info["aspect_ratio"],
             }
 
+            # Determine output file path
+            if overwrite:
+                # When overwriting, we'll work with temp file and replace at the end
+                final_output_path = video_path
+            else:
+                # Determine the output path and name
+                video_dir = os.path.dirname(video_path)
+                video_basename = os.path.basename(video_path)
+                
+                if output_path:
+                    # Use specified output directory
+                    os.makedirs(output_path, exist_ok=True)
+                    target_dir = output_path
+                else:
+                    # Use same directory as input
+                    target_dir = video_dir
+                
+                if output_name:
+                    # Use specified output name
+                    final_output_path = os.path.join(target_dir, output_name)
+                else:
+                    # Use same name as input
+                    final_output_path = os.path.join(target_dir, video_basename)
+            
+            # Working file starts as the input
+            current_video = video_path
+            temp_files = []
+            
             # Step 1: Resize if requested (do this before aspect ratio normalization)
             if resize_width or resize_height:
+                temp_output = f"{video_path}.resize.tmp"
+                temp_files.append(temp_output)
                 resize_success = await self.resize_video(
-                    video_path, resize_width, resize_height
+                    current_video, temp_output, resize_width, resize_height
                 )
                 results["operations"]["resize"] = resize_success
-                if not resize_success:
+                if resize_success:
+                    current_video = temp_output
+                else:
                     _LOGGER.warning("Resize operation failed, continuing with other operations")
 
             # Step 2: Normalize aspect ratio
             if normalize_aspect:
+                temp_output = f"{video_path}.normalize.tmp"
+                temp_files.append(temp_output)
                 normalize_success = await self.normalize_aspect_ratio(
-                    video_path, target_aspect_ratio
+                    current_video, temp_output, target_aspect_ratio
                 )
                 results["operations"]["normalize_aspect"] = normalize_success
-                if not normalize_success:
+                if normalize_success:
+                    current_video = temp_output
+                else:
                     _LOGGER.warning("Aspect ratio normalization failed, continuing with other operations")
 
             # Step 3: Generate and embed thumbnail
@@ -534,37 +565,66 @@ class VideoProcessor:
                 video_dir = os.path.dirname(video_path)
                 video_name = os.path.splitext(os.path.basename(video_path))[0]
                 thumbnail_path = os.path.join(video_dir, f"{video_name}_thumb.jpg")
+                temp_files.append(thumbnail_path)
 
                 thumbnail_success = await self.generate_thumbnail(
-                    video_path, thumbnail_path
+                    current_video, thumbnail_path
                 )
                 results["operations"]["generate_thumbnail"] = thumbnail_success
 
                 if thumbnail_success:
+                    temp_output = f"{video_path}.thumbnail.tmp"
+                    temp_files.append(temp_output)
                     embed_success = await self.embed_thumbnail(
-                        video_path, thumbnail_path
+                        current_video, temp_output, thumbnail_path
                     )
                     results["operations"]["embed_thumbnail"] = embed_success
-
-                    # Clean up standalone thumbnail file
-                    try:
-                        if os.path.exists(thumbnail_path):
-                            os.remove(thumbnail_path)
-                    except Exception as err:
-                        _LOGGER.debug("Could not remove thumbnail file: %s", err)
+                    if embed_success:
+                        current_video = temp_output
                 else:
                     results["operations"]["embed_thumbnail"] = False
 
+            # Copy/move the final result to the output path
+            if current_video != video_path:
+                # We have a processed video
+                if overwrite:
+                    # Replace original
+                    os.replace(current_video, final_output_path)
+                else:
+                    # Copy to output path
+                    shutil.copy2(current_video, final_output_path)
+                    
+                results["output_path"] = final_output_path
+            elif not overwrite and final_output_path != video_path:
+                # No processing was done but user wants a copy
+                shutil.copy2(video_path, final_output_path)
+                results["output_path"] = final_output_path
+            else:
+                # No processing and overwrite mode
+                results["output_path"] = video_path
+
+            # Clean up temporary files (but preserve the currently active processed video)
+            for temp_file in temp_files:
+                try:
+                    # Skip files that don't exist or are still being used as current_video
+                    if os.path.exists(temp_file) and temp_file != current_video:
+                        os.remove(temp_file)
+                except Exception as err:
+                    _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
+
             # Get final video information
-            final_info = await self.get_video_dimensions(video_path)
+            final_info = await self.get_video_dimensions(results["output_path"])
             results["final_dimensions"] = {
                 "width": final_info["width"],
                 "height": final_info["height"],
                 "aspect_ratio": final_info["aspect_ratio"],
             }
 
-            # Consider success if at least one operation succeeded
-            results["success"] = any(results["operations"].values())
+            # Success if at least one operation succeeded, or no operations were requested (simple copy)
+            results["success"] = (
+                any(results["operations"].values()) if results["operations"] 
+                else "output_path" in results
+            )
 
         except Exception as err:
             _LOGGER.error("Error processing video %s: %s", video_path, err)

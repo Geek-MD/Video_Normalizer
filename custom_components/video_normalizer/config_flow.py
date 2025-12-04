@@ -15,12 +15,12 @@ from .const import DOMAIN, DOWNLOADER_DOMAIN, CONF_DOWNLOAD_DIR
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]:
-    """Validate that the Downloader integration is installed and configured."""
+async def detect_downloader_integration(hass: HomeAssistant) -> dict[str, Any] | None:
+    """Try to detect the Downloader integration configuration."""
     # Check if downloader integration is loaded
     if DOWNLOADER_DOMAIN not in hass.config.components:
         _LOGGER.debug("Downloader integration not found in hass.config.components")
-        raise DownloaderNotInstalled("Downloader integration is not installed or configured")
+        return None
     
     _LOGGER.debug("Downloader integration found in components, attempting to retrieve configuration")
     
@@ -62,21 +62,13 @@ async def validate_downloader_integration(hass: HomeAssistant) -> dict[str, Any]
                 "Available integrations: %s",
                 [domain for domain in hass.config.components if "download" in domain.lower()]
             )
-        raise DownloaderNotConfigured("Downloader integration is not properly configured")
+        return None
     
     _LOGGER.info("Successfully retrieved download directory from Downloader")
     return {"download_dir": download_dir}
 
 
-class DownloaderNotInstalled(Exception):
-    """Error to indicate Downloader integration is not installed."""
-
-
-class DownloaderNotConfigured(Exception):
-    """Error to indicate Downloader integration is not configured."""
-
-
-class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]  # domain parameter is handled by ConfigFlow metaclass
+class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1
@@ -84,44 +76,29 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
-        errors: dict[str, str] = {}
-
+        """Handle the initial step - show recommendation for Downloader."""
         if user_input is not None:
-            try:
-                # Validate that Downloader is installed and get its configuration
-                info = await validate_downloader_integration(self.hass)
-                
-                # Create the config entry
-                return self.async_create_entry(
-                    title="Video Normalizer",
-                    data={
-                        CONF_DOWNLOAD_DIR: info["download_dir"],
-                    },
-                )
-            except DownloaderNotInstalled:
-                errors["base"] = "downloader_not_installed"
-            except DownloaderNotConfigured:
-                # If Downloader is installed but not configured properly,
-                # offer manual configuration as fallback
-                return await self.async_step_manual()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            # User clicked continue, proceed to configuration
+            return await self.async_step_configure()
+
+        # Try to detect if Downloader is already installed
+        downloader_info = await detect_downloader_integration(self.hass)
+        has_downloader = downloader_info is not None
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({}),
-            errors=errors,
+            errors={},
             description_placeholders={
-                "downloader_url": "https://www.home-assistant.io/integrations/downloader/"
+                "downloader_url": "https://www.home-assistant.io/integrations/downloader/",
+                "has_downloader": "✓" if has_downloader else "✗",
             },
         )
     
-    async def async_step_manual(
+    async def async_step_configure(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle manual configuration step when Downloader detection fails."""
+        """Handle configuration step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -130,7 +107,7 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
             if not download_dir:
                 errors[CONF_DOWNLOAD_DIR] = "download_dir_required"
             else:
-                # Create the config entry with manual configuration
+                # Create the config entry
                 return self.async_create_entry(
                     title="Video Normalizer",
                     data={
@@ -138,11 +115,17 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
                     },
                 )
 
+        # Try to detect Downloader configuration to pre-fill the field
+        downloader_info = await detect_downloader_integration(self.hass)
+        default_download_dir = ""
+        if downloader_info:
+            default_download_dir = downloader_info.get("download_dir", "")
+
         return self.async_show_form(
-            step_id="manual",
+            step_id="configure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DOWNLOAD_DIR): str,
+                    vol.Required(CONF_DOWNLOAD_DIR, default=default_download_dir): str,
                 }
             ),
             errors=errors,

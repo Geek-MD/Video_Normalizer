@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Video Normalizer - Bienvenido",
+        "description": "**Recomendación:** Para aprovechar al máximo esta integración, es recomendable tener instalada la integración **Downloader** ({has_downloader} Instalada).\n\nDownloader permite descargar archivos automáticamente, lo que complementa perfectamente con Video Normalizer para procesar videos descargados.\n\nPuedes instalar Downloader desde: {downloader_url}\n\nPresiona **Enviar** para continuar con la configuración.",
+        "data": {}
+      },
+      "configure": {
+        "title": "Configuración - Video Normalizer",
+        "description": "Configura el directorio de descargas donde se encuentran los videos a procesar.\n\nSi tienes Downloader instalado, este campo se pre-llenará automáticamente con el directorio configurado en Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
+        "data": {
+          "download_dir": "Directorio de Descargas"
+        }
+      }
+    },
+    "error": {
+      "download_dir_required": "El directorio de descargas es requerido.",
+      "unknown": "Error inesperado. Por favor, verifica los logs para más información."
+    },
+    "abort": {
+      "already_configured": "Video Normalizer ya está configurado"
+    }
+  }
+}
