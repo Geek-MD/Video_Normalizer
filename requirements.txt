@@ -6,6 +6,6 @@ mypy==1.10.0
 ruff==0.14.3
 voluptuous==0.13.1
 pytest==8.3.2
-aiohttp==3.9.3
+aiohttp==3.9.4
 types-setuptools==68.2.0.0
 
