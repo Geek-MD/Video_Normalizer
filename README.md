@@ -1,3 +1,11 @@
+[![Geek-MD - Video Normalizer](https://img.shields.io/static/v1?label=Geek-MD&message=Video%20Normalizer&color=blue&logo=github)](https://github.com/Geek-MD/Video_Normalizer)
+[![Stars](https://img.shields.io/github/stars/Geek-MD/Video_Normalizer?style=social)](https://github.com/Geek-MD/Video_Normalizer)
+[![Forks](https://img.shields.io/github/forks/Geek-MD/Video_Normalizer?style=social)](https://github.com/Geek-MD/Video_Normalizer)
+
+[![GitHub Release](https://img.shields.io/github/release/Geek-MD/Video_Normalizer?include_prereleases&sort=semver&color=blue)](https://github.com/Geek-MD/Video_Normalizer/releases)
+[![License](https://img.shields.io/badge/License-MIT-blue)](#license)
+![HACS Custom Repository](https://img.shields.io/badge/HACS-Custom%20Repository-blue)
+
 # Video Normalizer
 
 Home Assistant custom integration that normalizes aspect ratio of videos downloaded using the Downloader integration.
