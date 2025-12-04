@@ -2,24 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "Video Normalizer - Bienvenido",
-        "description": "**Recomendación:** Para aprovechar al máximo esta integración, es recomendable tener instalada la integración **Downloader** ({has_downloader} Instalada).\n\nDownloader permite descargar archivos automáticamente, lo que complementa perfectamente con Video Normalizer para procesar videos descargados.\n\nPuedes instalar Downloader desde: {downloader_url}\n\nPresiona **Enviar** para continuar con la configuración.",
+        "title": "Video Normalizer - Welcome",
+        "description": "**Recommendation:** To get the most out of this integration, it is recommended to have the **Downloader** integration installed ({has_downloader} Installed).\n\nDownloader allows automatic file downloads, which complements perfectly with Video Normalizer to process downloaded videos.\n\nYou can install Downloader from: {downloader_url}\n\nPress **Submit** to continue with the configuration.",
         "data": {}
       },
       "configure": {
-        "title": "Configuración - Video Normalizer",
-        "description": "Configura el directorio de descargas donde se encuentran los videos a procesar.\n\nSi tienes Downloader instalado, este campo se pre-llenará automáticamente con el directorio configurado en Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
+        "title": "Configuration - Video Normalizer",
+        "description": "Configure the download directory where videos to be processed are located.\n\nIf you have Downloader installed, this field will be pre-filled automatically with the directory configured in Downloader.\n\nFor more information about Downloader, visit: {downloader_url}",
         "data": {
-          "download_dir": "Directorio de Descargas"
+          "download_dir": "Download Directory"
         }
       }
     },
     "error": {
-      "download_dir_required": "El directorio de descargas es requerido.",
-      "unknown": "Error inesperado. Por favor, verifica los logs para más información."
+      "download_dir_required": "Download directory is required.",
+      "unknown": "Unexpected error occurred. Please check the logs for more information."
     },
     "abort": {
-      "already_configured": "Video Normalizer ya está configurado"
+      "already_configured": "Video Normalizer is already configured"
     }
   }
 }

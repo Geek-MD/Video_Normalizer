@@ -585,6 +585,7 @@ class VideoProcessor:
                     results["operations"]["embed_thumbnail"] = False
 
             # Copy/move the final result to the output path
+            final_processed_video = current_video  # Save reference to the final processed file
             if current_video != video_path:
                 # We have a processed video
                 if overwrite:
@@ -603,10 +604,11 @@ class VideoProcessor:
                 # No processing and overwrite mode
                 results["output_path"] = video_path
 
-            # Clean up temp files
+            # Clean up temporary files (but preserve the final processed video until after copy/move)
             for temp_file in temp_files:
                 try:
-                    if os.path.exists(temp_file) and temp_file != current_video:
+                    # Skip files that don't exist or were already moved/replaced
+                    if os.path.exists(temp_file) and temp_file != final_processed_video:
                         os.remove(temp_file)
                 except Exception as err:
                     _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
@@ -619,8 +621,12 @@ class VideoProcessor:
                 "aspect_ratio": final_info["aspect_ratio"],
             }
 
-            # Consider success if at least one operation succeeded or file was copied
-            results["success"] = any(results["operations"].values()) if results["operations"] else True
+            # Success if at least one operation succeeded, or no operations were requested (simple copy)
+            if results["operations"]:
+                results["success"] = any(results["operations"].values())
+            else:
+                # No operations requested - success if output path was set (file was copied)
+                results["success"] = "output_path" in results
 
         except Exception as err:
             _LOGGER.error("Error processing video %s: %s", video_path, err)
