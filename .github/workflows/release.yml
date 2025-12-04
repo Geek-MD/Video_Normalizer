@@ -1,0 +1,76 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'custom_components/video_normalizer/manifest.json'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get version from manifest
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' custom_components/video_normalizer/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+          echo "Tag: v$VERSION"
+      
+      - name: Check if version changed
+        id: check_version
+        run: |
+          # Get the version from the previous commit
+          PREV_VERSION=$(git show HEAD~1:custom_components/video_normalizer/manifest.json 2>/dev/null | jq -r '.version' || echo "none")
+          CURRENT_VERSION="${{ steps.get_version.outputs.version }}"
+          
+          echo "Previous version: $PREV_VERSION"
+          echo "Current version: $CURRENT_VERSION"
+          
+          if [ "$PREV_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version has not changed, no release needed"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version has changed from $PREV_VERSION to $CURRENT_VERSION"
+          fi
+      
+      - name: Check if tag exists
+        if: steps.check_version.outputs.changed == 'true'
+        id: check_tag
+        run: |
+          git fetch --tags
+          if git tag -l "v${{ steps.get_version.outputs.version }}" | grep -q .; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
+          fi
+      
+      - name: Create Release
+        if: steps.check_version.outputs.changed == 'true' && steps.check_tag.outputs.exists == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          release_name: ${{ steps.get_version.outputs.tag }}
+          body: |
+            Release ${{ steps.get_version.outputs.tag }}
+            
+            This release corresponds to version ${{ steps.get_version.outputs.version }} from manifest.json
+          draft: false
+          prerelease: false
