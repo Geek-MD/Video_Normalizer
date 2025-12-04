@@ -113,7 +113,10 @@ Releases are created with the format `vX.X.X` (e.g., `v0.2.0`) and can be trigge
 1. **Automatically**: When changes to `manifest.json` are pushed to the main branch
 2. **Manually**: By running the "Create Release" workflow from the Actions tab
 
-The workflow will check if a release with the current version already exists before creating a new one.
+The workflow includes the following safeguards:
+- Verifies that the version number in `manifest.json` has actually changed compared to the previous commit
+- Checks if a release with the current version already exists before creating a new one
+- Only creates a release when both conditions are met (version changed and tag doesn't exist)
 
 ---
 
