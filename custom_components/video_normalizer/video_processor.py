@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import shutil
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -591,13 +592,11 @@ class VideoProcessor:
                     os.replace(current_video, final_output_path)
                 else:
                     # Copy to output path
-                    import shutil
                     shutil.copy2(current_video, final_output_path)
                     
                 results["output_path"] = final_output_path
             elif not overwrite and final_output_path != video_path:
                 # No processing was done but user wants a copy
-                import shutil
                 shutil.copy2(video_path, final_output_path)
                 results["output_path"] = final_output_path
             else:
