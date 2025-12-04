@@ -25,5 +25,57 @@ The integration will automatically detect and use the download directory configu
 
 - Automatic detection of Downloader integration
 - Uses the same download directory as Downloader
+- **Automatic aspect ratio normalization** for all downloaded videos to prevent square or distorted previews in Telegram and mobile players
+- **Automatic thumbnail generation and embedding** to force Telegram to use the correct video preview
+- **Optional video resizing subprocess** (width/height) if dimensions differ
+- **Robust detection of video dimensions** using ffprobe (JSON) with ffmpeg -i fallback
 - Emits automation-friendly events on video processing success or failure
 - Easy setup through the Home Assistant UI
+
+## Services
+
+### video_normalizer.normalize_video
+
+Process a video file with normalization operations.
+
+**Parameters:**
+- `video_path` (required): Path to the video file to process
+- `normalize_aspect` (optional, default: true): Whether to normalize the aspect ratio to 16:9
+- `generate_thumbnail` (optional, default: true): Whether to generate and embed a thumbnail
+- `resize_width` (optional): Target width for resizing (maintains aspect ratio if only one dimension specified)
+- `resize_height` (optional): Target height for resizing (maintains aspect ratio if only one dimension specified)
+- `target_aspect_ratio` (optional, default: 1.777): Target aspect ratio as a decimal (e.g., 1.777 for 16:9, 1.333 for 4:3)
+
+**Example automation:**
+
+```yaml
+automation:
+  - alias: "Normalize Downloaded Videos"
+    trigger:
+      - platform: event
+        event_type: folder_watcher
+        event_data:
+          event_type: created
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.file.endswith(('.mp4', '.avi', '.mov', '.mkv')) }}"
+    action:
+      - service: video_normalizer.normalize_video
+        data:
+          video_path: "{{ trigger.event.data.path }}"
+          normalize_aspect: true
+          generate_thumbnail: true
+```
+
+**Events:**
+
+The service fires events that can be used in automations:
+- `video_normalizer_video_processing_success`: Fired when video processing completes successfully
+- `video_normalizer_video_processing_failed`: Fired when video processing fails
+
+## Requirements
+
+This integration requires:
+- The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured in Home Assistant
+- FFmpeg to be available in the Home Assistant environment (typically pre-installed)
+
