@@ -406,7 +406,8 @@ class VideoProcessor:
             new_width = target_width
             new_height = int(target_width / (current_width / current_height))
         else:  # target_height only
-            assert target_height is not None
+            if target_height is None:
+                raise ValueError("Either target_width or target_height must be provided")
             new_height = target_height
             new_width = int(target_height * (current_width / current_height))
 

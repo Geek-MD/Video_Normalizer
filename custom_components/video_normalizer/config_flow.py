@@ -42,7 +42,7 @@ class DownloaderNotConfigured(Exception):
     """Error to indicate Downloader integration is not configured."""
 
 
-class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]  # domain parameter is handled by ConfigFlow metaclass
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1
