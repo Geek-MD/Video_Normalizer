@@ -19,7 +19,7 @@ This integration requires the [Downloader](https://www.home-assistant.io/integra
 7. Search for "Video Normalizer" in HACS
 8. Click "Download"
 9. Restart Home Assistant
-10. Go to Configuration > Integrations
+10. Go to Settings > Devices & Services
 11. Click the + button to add a new integration
 12. Search for "Video Normalizer"
 13. Follow the configuration steps
@@ -28,7 +28,7 @@ This integration requires the [Downloader](https://www.home-assistant.io/integra
 
 1. Copy the `custom_components/video_normalizer` directory to your Home Assistant `custom_components` directory
 2. Restart Home Assistant
-3. Go to Configuration > Integrations
+3. Go to Settings > Devices & Services
 4. Click the + button to add a new integration
 5. Search for "Video Normalizer"
 6. Follow the configuration steps
