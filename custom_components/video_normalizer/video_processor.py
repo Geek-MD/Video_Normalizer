@@ -38,7 +38,7 @@ class VideoProcessor:
             Dictionary with video information including width, height, and aspect ratio
         """
         _LOGGER.info("Detecting video dimensions for: %s", video_path)
-        
+
         # Try ffprobe first (JSON output)
         try:
             result = await self._get_dimensions_with_ffprobe(video_path)
@@ -247,7 +247,7 @@ class VideoProcessor:
             Dictionary with analysis results
         """
         _LOGGER.info("Analyzing video processing requirements: %s", video_path)
-        
+
         if target_aspect_ratio is None:
             target_aspect_ratio = 16 / 9
 
@@ -345,7 +345,7 @@ class VideoProcessor:
             True if thumbnail was generated successfully
         """
         _LOGGER.info("Generating thumbnail for video: %s", video_path)
-        
+
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -392,7 +392,7 @@ class VideoProcessor:
             True if thumbnail was embedded successfully
         """
         _LOGGER.info("Embedding thumbnail into video: %s", video_path)
-        
+
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
