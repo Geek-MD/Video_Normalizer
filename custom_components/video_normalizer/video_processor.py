@@ -164,6 +164,145 @@ class VideoProcessor:
             _LOGGER.debug("Failed to parse ffmpeg output: %s", err)
             return None
 
+    async def check_video_has_thumbnail(self, video_path: str) -> bool:
+        """Check if video has an embedded thumbnail.
+        
+        Args:
+            video_path: Path to the video file
+            
+        Returns:
+            True if video has an embedded thumbnail
+        """
+        cmd = [
+            self.ffprobe_path,
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_streams",
+            video_path,
+        ]
+
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                _LOGGER.debug(
+                    "ffprobe returned non-zero exit code: %s", stderr.decode()
+                )
+                return False
+
+            data = json.loads(stdout.decode())
+            streams = data.get("streams", [])
+            
+            # Check if any stream has disposition attached_pic
+            for stream in streams:
+                if stream.get("codec_type") == "video":
+                    disposition = stream.get("disposition", {})
+                    if disposition.get("attached_pic") == 1:
+                        return True
+            
+            return False
+
+        except (json.JSONDecodeError, KeyError, TypeError) as err:
+            _LOGGER.debug("Failed to check for thumbnail: %s", err)
+            return False
+
+    async def analyze_video_needs_processing(
+        self,
+        video_path: str,
+        normalize_aspect: bool = True,
+        generate_thumbnail: bool = True,
+        resize_width: int | None = None,
+        resize_height: int | None = None,
+        target_aspect_ratio: float | None = None,
+    ) -> dict[str, Any]:
+        """Analyze if video needs processing.
+        
+        Args:
+            video_path: Path to the video file
+            normalize_aspect: Whether aspect ratio normalization is requested
+            generate_thumbnail: Whether thumbnail generation is requested
+            resize_width: Optional target width for resizing
+            resize_height: Optional target height for resizing
+            target_aspect_ratio: Optional target aspect ratio (default: 16/9)
+            
+        Returns:
+            Dictionary with analysis results
+        """
+        if target_aspect_ratio is None:
+            target_aspect_ratio = 16 / 9
+
+        analysis: dict[str, Any] = {
+            "needs_processing": False,
+            "reasons": [],
+        }
+
+        try:
+            # Get video dimensions
+            info = await self.get_video_dimensions(video_path)
+            current_aspect_ratio = info["aspect_ratio"]
+            current_width = info["width"]
+            current_height = info["height"]
+
+            # Check if resize is needed
+            if resize_width or resize_height:
+                # Calculate target dimensions
+                if resize_width and resize_height:
+                    needs_resize = (current_width != resize_width or 
+                                   current_height != resize_height)
+                elif resize_width:
+                    target_height = int(resize_width / (current_width / current_height))
+                    needs_resize = (current_width != resize_width or 
+                                   current_height != target_height)
+                else:  # resize_height only
+                    if resize_height is not None:
+                        target_width = int(resize_height * (current_width / current_height))
+                        needs_resize = (current_width != target_width or 
+                                       current_height != resize_height)
+                    else:
+                        needs_resize = False
+                
+                if needs_resize:
+                    analysis["needs_processing"] = True
+                    analysis["reasons"].append("Video dimensions differ from target")
+
+            # Check if aspect ratio normalization is needed
+            if normalize_aspect:
+                # Check with small tolerance
+                if abs(current_aspect_ratio - target_aspect_ratio) >= 0.01:
+                    analysis["needs_processing"] = True
+                    analysis["reasons"].append(
+                        f"Aspect ratio {current_aspect_ratio:.3f} differs from target "
+                        f"{target_aspect_ratio:.3f}"
+                    )
+
+            # Check if thumbnail is needed
+            if generate_thumbnail:
+                has_thumbnail = await self.check_video_has_thumbnail(video_path)
+                if not has_thumbnail:
+                    analysis["needs_processing"] = True
+                    analysis["reasons"].append("Video does not have embedded thumbnail")
+
+            # Add video info to analysis
+            analysis["video_info"] = {
+                "width": current_width,
+                "height": current_height,
+                "aspect_ratio": current_aspect_ratio,
+            }
+
+        except Exception as err:
+            _LOGGER.error("Error analyzing video %s: %s", video_path, err)
+            analysis["error"] = str(err)
+            # If we can't analyze, assume processing is needed
+            analysis["needs_processing"] = True
+            analysis["reasons"].append("Failed to analyze video")
+
+        return analysis
+
     async def generate_thumbnail(
         self, video_path: str, thumbnail_path: str, timestamp: str = "00:00:01"
     ) -> bool:
@@ -504,6 +643,30 @@ class VideoProcessor:
                 "height": info["height"],
                 "aspect_ratio": info["aspect_ratio"],
             }
+
+            # Analyze if video needs processing
+            analysis = await self.analyze_video_needs_processing(
+                video_path,
+                normalize_aspect,
+                generate_thumbnail,
+                resize_width,
+                resize_height,
+                target_aspect_ratio,
+            )
+            
+            results["analysis"] = analysis
+
+            # If video doesn't need processing, skip and return success
+            if not analysis["needs_processing"]:
+                _LOGGER.info(
+                    "Video does not need processing: %s", video_path
+                )
+                results["success"] = True
+                results["skipped"] = True
+                results["skip_reason"] = "Video already meets all requirements"
+                results["output_path"] = video_path
+                results["final_dimensions"] = results["original_dimensions"]
+                return results
 
             # Determine output file path
             if overwrite:

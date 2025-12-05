@@ -94,11 +94,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             
             if result["success"]:
-                _LOGGER.info("Video processed successfully: %s", video_path)
-                hass.bus.async_fire(
-                    f"{DOMAIN}_video_processing_success",
-                    result,
-                )
+                # Check if video was skipped (no processing needed)
+                if result.get("skipped", False):
+                    _LOGGER.info(
+                        "Video processing skipped (no changes needed): %s", video_path
+                    )
+                    hass.bus.async_fire(
+                        f"{DOMAIN}_video_skipped",
+                        result,
+                    )
+                else:
+                    _LOGGER.info("Video processed successfully: %s", video_path)
+                    hass.bus.async_fire(
+                        f"{DOMAIN}_video_processing_success",
+                        result,
+                    )
             else:
                 _LOGGER.error(
                     "Video processing failed: %s - %s",
