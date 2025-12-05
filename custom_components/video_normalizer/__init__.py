@@ -41,7 +41,7 @@ SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Video Normalizer from a config entry."""
-    _LOGGER.debug("Setting up Video Normalizer integration")
+    _LOGGER.info("Setting up Video Normalizer integration")
     
     # Store the download directory from config
     hass.data.setdefault(DOMAIN, {})
@@ -137,14 +137,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_NORMALIZE_VIDEO_SCHEMA,
     )
     
-    _LOGGER.debug("Video Normalizer service registered")
+    _LOGGER.info("Video Normalizer service registered successfully")
     
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading Video Normalizer integration")
+    _LOGGER.info("Unloading Video Normalizer integration")
     
     # Unregister the service
     hass.services.async_remove(DOMAIN, SERVICE_NORMALIZE_VIDEO)
