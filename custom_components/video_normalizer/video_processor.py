@@ -14,6 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class VideoProcessor:
     """Handle video normalization operations."""
+    
+    # Tolerance for aspect ratio comparison
+    ASPECT_RATIO_TOLERANCE = 0.01
 
     def __init__(self, ffmpeg_path: str = "ffmpeg", ffprobe_path: str = "ffprobe"):
         """Initialize the video processor.
@@ -251,20 +254,25 @@ class VideoProcessor:
             # Check if resize is needed
             if resize_width or resize_height:
                 # Calculate target dimensions
+                video_aspect_ratio = current_width / current_height
+                
                 if resize_width and resize_height:
-                    needs_resize = (current_width != resize_width or 
-                                   current_height != resize_height)
+                    needs_resize = (
+                        current_width != resize_width or 
+                        current_height != resize_height
+                    )
                 elif resize_width:
-                    target_height = int(resize_width / (current_width / current_height))
-                    needs_resize = (current_width != resize_width or 
-                                   current_height != target_height)
+                    target_height = int(resize_width / video_aspect_ratio)
+                    needs_resize = (
+                        current_width != resize_width or 
+                        current_height != target_height
+                    )
                 else:  # resize_height only
-                    if resize_height is not None:
-                        target_width = int(resize_height * (current_width / current_height))
-                        needs_resize = (current_width != target_width or 
-                                       current_height != resize_height)
-                    else:
-                        needs_resize = False
+                    target_width = int(resize_height * video_aspect_ratio)
+                    needs_resize = (
+                        current_width != target_width or 
+                        current_height != resize_height
+                    )
                 
                 if needs_resize:
                     analysis["needs_processing"] = True
@@ -273,7 +281,7 @@ class VideoProcessor:
             # Check if aspect ratio normalization is needed
             if normalize_aspect:
                 # Check with small tolerance
-                if abs(current_aspect_ratio - target_aspect_ratio) >= 0.01:
+                if abs(current_aspect_ratio - target_aspect_ratio) >= self.ASPECT_RATIO_TOLERANCE:
                     analysis["needs_processing"] = True
                     analysis["reasons"].append(
                         f"Aspect ratio {current_aspect_ratio:.3f} differs from target "
@@ -429,7 +437,7 @@ class VideoProcessor:
         current_aspect_ratio = info["aspect_ratio"]
         
         # Check if normalization is needed (with small tolerance)
-        if abs(current_aspect_ratio - target_aspect_ratio) < 0.01:
+        if abs(current_aspect_ratio - target_aspect_ratio) < self.ASPECT_RATIO_TOLERANCE:
             _LOGGER.debug(
                 "Video already has correct aspect ratio: %.3f", current_aspect_ratio
             )
