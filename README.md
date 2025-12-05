@@ -55,11 +55,13 @@ During setup, you'll need to configure the download directory where videos are l
 
 - Optional Downloader integration detection and auto-configuration
 - **Flexible output path and naming** - specify custom output directory and filename, or overwrite the original
+- **Smart video analysis** - automatically detects if video needs processing (aspect ratio, thumbnail, dimensions)
 - **Automatic aspect ratio normalization** for all videos to prevent square or distorted previews in Telegram and mobile players
 - **Automatic thumbnail generation and embedding** to force Telegram to use the correct video preview
 - **Optional video resizing** (width/height) if dimensions differ
+- **Intelligent skip logic** - skips processing if video already meets requirements (unless resize is requested)
 - **Robust detection of video dimensions** using ffprobe (JSON) with ffmpeg -i fallback
-- Emits automation-friendly events on video processing success or failure
+- Emits automation-friendly events on video processing success, failure, or skip
 - Easy setup through the Home Assistant UI
 
 ## Services
@@ -104,6 +106,7 @@ automation:
 
 The service fires events that can be used in automations:
 - `video_normalizer_video_processing_success`: Fired when video processing completes successfully
+- `video_normalizer_video_skipped`: Fired when video processing is skipped because the video already meets all requirements (no changes needed)
 - `video_normalizer_video_processing_failed`: Fired when video processing fails
 
 ## Requirements
