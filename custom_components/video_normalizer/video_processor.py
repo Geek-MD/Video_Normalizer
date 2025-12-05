@@ -37,10 +37,16 @@ class VideoProcessor:
         Returns:
             Dictionary with video information including width, height, and aspect ratio
         """
+        _LOGGER.info("Detecting video dimensions for: %s", video_path)
+        
         # Try ffprobe first (JSON output)
         try:
             result = await self._get_dimensions_with_ffprobe(video_path)
             if result:
+                _LOGGER.info(
+                    "Video dimensions detected: %dx%d (aspect ratio: %.3f)",
+                    result["width"], result["height"], result["aspect_ratio"]
+                )
                 return result
         except Exception as err:
             _LOGGER.debug(
@@ -51,6 +57,10 @@ class VideoProcessor:
         try:
             result = await self._get_dimensions_with_ffmpeg(video_path)
             if result:
+                _LOGGER.info(
+                    "Video dimensions detected (via ffmpeg): %dx%d (aspect ratio: %.3f)",
+                    result["width"], result["height"], result["aspect_ratio"]
+                )
                 return result
         except Exception as err:
             _LOGGER.error(
@@ -236,6 +246,8 @@ class VideoProcessor:
         Returns:
             Dictionary with analysis results
         """
+        _LOGGER.info("Analyzing video processing requirements: %s", video_path)
+        
         if target_aspect_ratio is None:
             target_aspect_ratio = 16 / 9
 
@@ -301,6 +313,14 @@ class VideoProcessor:
                 "height": current_height,
                 "aspect_ratio": current_aspect_ratio,
             }
+            
+            # Log analysis results
+            if analysis["needs_processing"]:
+                _LOGGER.info(
+                    "Video needs processing. Reasons: %s", ", ".join(analysis["reasons"])
+                )
+            else:
+                _LOGGER.info("Video already meets all requirements, no processing needed")
 
         except Exception as err:
             _LOGGER.error("Error analyzing video %s: %s", video_path, err)
@@ -324,6 +344,8 @@ class VideoProcessor:
         Returns:
             True if thumbnail was generated successfully
         """
+        _LOGGER.info("Generating thumbnail for video: %s", video_path)
+        
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -349,7 +371,7 @@ class VideoProcessor:
                 return False
 
             if os.path.exists(thumbnail_path):
-                _LOGGER.debug("Thumbnail generated successfully at %s", thumbnail_path)
+                _LOGGER.info("Thumbnail generated successfully at %s", thumbnail_path)
                 return True
             
             return False
@@ -369,6 +391,8 @@ class VideoProcessor:
         Returns:
             True if thumbnail was embedded successfully
         """
+        _LOGGER.info("Embedding thumbnail into video: %s", video_path)
+        
         cmd = [
             self.ffmpeg_path,
             "-i", video_path,
@@ -398,7 +422,7 @@ class VideoProcessor:
                     os.remove(output_video_path)
                 return False
 
-            _LOGGER.debug("Thumbnail embedded successfully")
+            _LOGGER.info("Thumbnail embedded successfully")
             return True
 
         except Exception as err:
