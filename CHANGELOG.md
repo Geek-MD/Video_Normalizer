@@ -24,10 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- Updated event firing order in file validation path (line 121-132 in __init__.py)
+- Updated event firing order in file validation path (file not found early return)
 - Event now fires before `sensor.set_idle()` is called, consistent with all other code paths
 - Added `_ensure_event_processed()` helper function to yield to the event loop after event firing
-- Applied helper function to all six event firing locations for consistency
+- Applied helper function to all six event firing locations for consistency:
+  - File not found validation
+  - Video skipped (no processing needed)
+  - Video processing success
+  - Video processing failed (error during processing)
+  - Timeout error handler
+  - Exception error handler
 - Added comprehensive docstring explaining the purpose of the event loop yield
 - All code maintains consistency with the service lifecycle order
 - Prevents race conditions between event firing and service completion
