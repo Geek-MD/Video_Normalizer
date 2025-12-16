@@ -742,7 +742,9 @@ class VideoProcessor:
             
             # Step 1: Resize if requested (do this before aspect ratio normalization)
             if resize_width or resize_height:
-                temp_output = f"{video_path}.resize.tmp"
+                # Preserve original extension for ffmpeg format detection
+                base_path, ext = os.path.splitext(video_path)
+                temp_output = f"{base_path}.resize.tmp{ext}"
                 temp_files.append(temp_output)
                 resize_success = await self.resize_video(
                     current_video, temp_output, resize_width, resize_height
@@ -755,7 +757,9 @@ class VideoProcessor:
 
             # Step 2: Normalize aspect ratio
             if normalize_aspect:
-                temp_output = f"{video_path}.normalize.tmp"
+                # Preserve original extension for ffmpeg format detection
+                base_path, ext = os.path.splitext(video_path)
+                temp_output = f"{base_path}.normalize.tmp{ext}"
                 temp_files.append(temp_output)
                 normalize_success = await self.normalize_aspect_ratio(
                     current_video, temp_output, target_aspect_ratio
@@ -780,7 +784,9 @@ class VideoProcessor:
                 results["operations"]["generate_thumbnail"] = thumbnail_success
 
                 if thumbnail_success:
-                    temp_output = f"{video_path}.thumbnail.tmp"
+                    # Preserve original extension for ffmpeg format detection
+                    base_path, ext = os.path.splitext(video_path)
+                    temp_output = f"{base_path}.thumbnail.tmp{ext}"
                     temp_files.append(temp_output)
                     embed_success = await self.embed_thumbnail(
                         current_video, temp_output, thumbnail_path
