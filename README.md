@@ -55,8 +55,13 @@ During setup, you'll need to configure the download directory where videos are l
 
 ## Features
 
+- **Status Sensor** - Monitor the integration's processing state with a sensor entity that tracks:
+  - Current state: `working` or `idle`
+  - Last job result: `success`, `skipped`, or `failed`
+  - Timestamp of last state change (server local time)
+  - List of processes performed (resize, normalize_aspect, embed_thumbnail, etc.)
 - Optional Downloader integration detection and auto-configuration
-- **Flexible output path and naming** - specify custom output directory and filename, or overwrite the original
+- **Simplified output configuration** - specify a single output file path or overwrite the original
 - **Smart video analysis** - automatically detects if video needs processing (aspect ratio, thumbnail, dimensions)
 - **Automatic aspect ratio normalization** for all videos to prevent square or distorted previews in Telegram and mobile players
 - **Automatic thumbnail generation and embedding** to force Telegram to use the correct video preview
@@ -73,10 +78,9 @@ During setup, you'll need to configure the download directory where videos are l
 Process a video file with normalization operations.
 
 **Parameters:**
-- `video_path` (required): Path to the video file to process
-- `output_path` (optional): Directory where the processed video will be saved (defaults to same directory as input)
-- `output_name` (optional): Name for the output video file (defaults to same name as input)
-- `overwrite` (optional, default: false): Whether to overwrite the original file
+- `input_file_path` (required): Full path to the input video file including filename (e.g., "/media/ring/ring.mp4")
+- `output_file_path` (optional): Full path for the output video file including filename (e.g., "/media/processed/ring_normalized.mp4"). Only required when `overwrite` is false
+- `overwrite` (optional, default: false): Whether to overwrite the original file. When true, `output_file_path` is ignored
 - `normalize_aspect` (optional, default: true): Whether to normalize the aspect ratio to 16:9
 - `generate_thumbnail` (optional, default: true): Whether to generate and embed a thumbnail
 - `resize_width` (optional): Target width for resizing (maintains aspect ratio if only one dimension specified)
@@ -99,12 +103,47 @@ automation:
     action:
       - service: video_normalizer.normalize_video
         data:
-          video_path: "{{ trigger.event.data.path }}"
+          input_file_path: "{{ trigger.event.data.path }}"
+          output_file_path: "{{ trigger.event.data.path | replace('.mp4', '_normalized.mp4') }}"
           normalize_aspect: true
           generate_thumbnail: true
 ```
 
-## Events:
+## Entities
+
+### Status Sensor
+
+The integration provides a status sensor (`sensor.video_normalizer_status`) that tracks the processing state:
+
+- **States:**
+  - `working`: Currently processing a video
+  - `idle`: Not processing, waiting for work
+
+- **Attributes:**
+  - `last_job`: Result of the last processing job (`success`, `skipped`, or `failed`)
+  - `timestamp`: ISO 8601 timestamp of when the state last changed (server local time)
+  - `processes`: List of processes performed in the last job (e.g., `["resize", "normalize_aspect", "embed_thumbnail"]`)
+
+**Example automation using the sensor:**
+
+```yaml
+automation:
+  - alias: "Notify when video processing completes"
+    trigger:
+      - platform: state
+        entity_id: sensor.video_normalizer_status
+        from: "working"
+        to: "idle"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Video Processing Complete"
+          message: >
+            Result: {{ state_attr('sensor.video_normalizer_status', 'last_job') }}
+            Processes: {{ state_attr('sensor.video_normalizer_status', 'processes') | join(', ') }}
+```
+
+## Events
 
 The service fires events that can be used in automations:
 - `video_normalizer_video_processing_success`: Fired when video processing completes successfully

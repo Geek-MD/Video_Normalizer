@@ -2,25 +2,18 @@ normalize_video:
   name: Normalize Video
   description: Normalize video aspect ratio, generate thumbnail, and optionally resize
   fields:
-    video_path:
-      name: Video Path
-      description: Path to the video file to process
+    input_file_path:
+      name: Input File Path
+      description: Full path to the input video file including filename
       required: true
-      example: "/config/downloads/video.mp4"
+      example: "/media/ring/ring.mp4"
       selector:
         text:
-    output_path:
-      name: Output Path
-      description: Path where the processed video will be saved (defaults to the same directory as input video)
+    output_file_path:
+      name: Output File Path
+      description: Full path for the output video file including filename (only required when not overwriting)
       required: false
-      example: "/config/downloads/processed/"
-      selector:
-        text:
-    output_name:
-      name: Output Name
-      description: Name for the output video file (defaults to the same name as input video)
-      required: false
-      example: "video_normalized.mp4"
+      example: "/media/processed/ring_normalized.mp4"
       selector:
         text:
     overwrite:
