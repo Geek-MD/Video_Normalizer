@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2025-12-16
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed event firing order in early return path (file not found validation)
+  - Issue: When a video file was not found, the sensor state was being updated before the event was fired
+  - This caused automations waiting for `video_normalizer_video_processing_failed` event to not trigger properly
+  - The bug was inconsistent with the rest of the codebase where events are always fired before sensor updates
+  - Solution: Swapped the order to fire the event first, then update the sensor state
+  - Now follows the correct service lifecycle documented in v0.5.4: process → fire events → update sensor → cleanup
+
+### Technical
+
+- Updated event firing order in file validation path (line 109-119 in __init__.py)
+- Event now fires before `sensor.set_idle()` is called, consistent with all other code paths
+- Added clarifying comment: "# Fire event before sensor update and cleanup"
+- All code maintains consistency with the service lifecycle order
+
 ## [0.5.4] - 2025-12-16
 
 ### Fixed

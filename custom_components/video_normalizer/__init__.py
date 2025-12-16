@@ -106,8 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
-            if sensor:
-                sensor.set_idle("failed", processes_performed)
+            # Fire event before sensor update and cleanup
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
@@ -115,6 +114,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": "Video file not found",
                 },
             )
+            # Update sensor state to idle after event
+            if sensor:
+                sensor.set_idle("failed", processes_performed)
             return
         
         # Parse output_file_path to extract output_path and output_name
