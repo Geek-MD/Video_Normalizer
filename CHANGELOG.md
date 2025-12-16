@@ -24,10 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- Updated event firing order in file validation path (line 109-122 in __init__.py)
+- Updated event firing order in file validation path (line 121-132 in __init__.py)
 - Event now fires before `sensor.set_idle()` is called, consistent with all other code paths
-- Added `await asyncio.sleep(0)` after each event firing to yield to the event loop
-- Added clarifying comments throughout: "# Yield to event loop to ensure event is processed"
+- Added `_ensure_event_processed()` helper function to yield to the event loop after event firing
+- Applied helper function to all six event firing locations for consistency
+- Added comprehensive docstring explaining the purpose of the event loop yield
 - All code maintains consistency with the service lifecycle order
 - Prevents race conditions between event firing and service completion
 

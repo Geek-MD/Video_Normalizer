@@ -24,6 +24,18 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 # Service constants
 SERVICE_NORMALIZE_VIDEO = "normalize_video"
 
+
+async def _ensure_event_processed() -> None:
+    """Yield to event loop to ensure events are processed.
+    
+    This is called after hass.bus.async_fire() to ensure the event
+    is processed by the event loop before the service continues.
+    This prevents race conditions where the service completes before
+    automations can catch the fired events.
+    """
+    await asyncio.sleep(0)
+
+
 # Service schema
 SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
     {
@@ -114,8 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": "Video file not found",
                 },
             )
-            # Yield to event loop to ensure event is processed
-            await asyncio.sleep(0)
+            await _ensure_event_processed()
             # Update sensor state to idle after event
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -178,8 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         f"{DOMAIN}_video_skipped",
                         result,
                     )
-                    # Yield to event loop to ensure event is processed
-                    await asyncio.sleep(0)
+                    await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -196,8 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         f"{DOMAIN}_video_processing_success",
                         result,
                     )
-                    # Yield to event loop to ensure event is processed
-                    await asyncio.sleep(0)
+                    await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("success", processes_performed)
@@ -215,8 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
-                # Yield to event loop to ensure event is processed
-                await asyncio.sleep(0)
+                await _ensure_event_processed()
                 # Update sensor state to idle after event, before cleanup
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
@@ -242,8 +250,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": f"Processing timed out after {timeout} seconds",
                 },
             )
-            # Yield to event loop to ensure event is processed
-            await asyncio.sleep(0)
+            await _ensure_event_processed()
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -266,8 +273,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": str(err),
                 },
             )
-            # Yield to event loop to ensure event is processed
-            await asyncio.sleep(0)
+            await _ensure_event_processed()
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
