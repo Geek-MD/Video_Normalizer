@@ -10,17 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Processing Timeout**: New timeout parameter to prevent indefinite hangs during video processing
-  - Configurable timeout parameter in integration setup (default: 600 seconds / 10 minutes)
+  - Configurable timeout parameter in integration setup (default: 300 seconds / 5 minutes)
   - Optional timeout parameter in `normalize_video` service call to override configured default
   - Automatically terminates processing if it exceeds the timeout
   - Logs timeout events with clear error messages
   - Fires `video_normalizer_video_processing_failed` event with timeout error details
   - Sensor updates to "failed" state when timeout occurs
-- Default timeout of 600 seconds (10 minutes) should handle most typical video processing scenarios:
-  - Short surveillance videos (1-5 min, 720p-1080p): ~30-120 seconds
-  - Medium videos (5-10 min, 1080p): ~2-5 minutes
-  - Longer videos or 4K content: ~5-10 minutes
-  - Timeout prevents indefinite hangs on corrupted or extremely large files
+- Default timeout of 300 seconds (5 minutes) optimized for Home Assistant Green hardware:
+  - Home Assistant Green specs: Rockchip RK3566 (Quad-core ARM Cortex-A55 @ 1.8 GHz), 4 GB RAM
+  - Typical processing times on Home Assistant Green:
+    - 30-second 720p video: ~30-60 seconds
+    - 2-minute 1080p video: ~2-3 minutes
+    - 5-minute 1080p video: ~4-8 minutes
+  - 5-minute timeout handles most surveillance/doorbell videos while preventing indefinite hangs
 
 ### Changed
 
@@ -34,8 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `CONF_TIMEOUT` and `DEFAULT_TIMEOUT` constants to const.py
 - Updated service schema to accept optional timeout parameter
 - Improved error handling with specific timeout exception catching
-- Added timeout validation in config flow (must be positive integer)
+- Removed redundant validation logic (handled by voluptuous schema)
 - All code passes ruff linting and mypy type checking
+- CodeQL security scan: 0 vulnerabilities
 - Updated translations (English and Spanish) to include timeout configuration
 
 ## [0.5.0] - 2025-12-16

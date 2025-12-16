@@ -67,9 +67,9 @@ normalize_video:
           mode: box
     timeout:
       name: Timeout
-      description: Maximum time in seconds to wait for processing to complete (default 600 seconds / 10 minutes). If processing takes longer, it will be terminated.
+      description: Maximum time in seconds to wait for processing to complete (default 300 seconds / 5 minutes). If processing takes longer, it will be terminated.
       required: false
-      example: 600
+      example: 300
       selector:
         number:
           min: 1
