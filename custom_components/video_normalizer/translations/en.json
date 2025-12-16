@@ -17,7 +17,6 @@
     },
     "error": {
       "download_dir_required": "Download directory is required.",
-      "timeout_positive": "Timeout must be a positive number.",
       "unknown": "Unexpected error occurred. Please check the logs for more information."
     },
     "abort": {

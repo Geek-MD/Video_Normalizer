@@ -107,8 +107,6 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
             
             if not download_dir:
                 errors[CONF_DOWNLOAD_DIR] = "download_dir_required"
-            elif timeout <= 0:
-                errors[CONF_TIMEOUT] = "timeout_positive"
             else:
                 # Create the config entry
                 return self.async_create_entry(

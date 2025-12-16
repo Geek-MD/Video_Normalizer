@@ -75,13 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Get timeout from service call or use configured default
         timeout = call.data.get("timeout")
         if timeout is None:
-            # Use the configured timeout from the first config entry
-            for entry_data in hass.data[DOMAIN].values():
+            # Use the configured timeout from the entry
+            timeout = DEFAULT_TIMEOUT
+            for entry_id, entry_data in hass.data[DOMAIN].items():
                 if isinstance(entry_data, dict) and CONF_TIMEOUT in entry_data:
                     timeout = entry_data[CONF_TIMEOUT]
                     break
-            if timeout is None:
-                timeout = DEFAULT_TIMEOUT
         
         _LOGGER.info("Processing video: %s (timeout: %d seconds)", input_file_path, timeout)
         
