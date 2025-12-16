@@ -29,6 +29,24 @@ jobs:
           echo "Version: $VERSION"
           echo "Tag: v$VERSION"
       
+      - name: Extract changelog for version
+        id: changelog
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          
+          # Extract the changelog section for this version
+          # This reads from the first occurrence of [VERSION] to the next ## heading
+          CHANGELOG=$(awk "/## \[$VERSION\]/,/^## \[/ {if (/^## \[/ && !/## \[$VERSION\]/) exit; print}" CHANGELOG.md | sed '1d')
+          
+          # If changelog is empty, use a default message
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="Release version $VERSION"
+          fi
+          
+          # Save to file to preserve formatting
+          echo "$CHANGELOG" > release_notes.md
+          echo "Extracted changelog for version $VERSION"
+      
       - name: Check if tag exists
         id: check_tag
         run: |
@@ -48,10 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
-          release_name: ${{ steps.get_version.outputs.tag }}
-          body: |
-            Release ${{ steps.get_version.outputs.tag }}
-            
-            This release corresponds to version ${{ steps.get_version.outputs.version }} from manifest.json
+          release_name: Release ${{ steps.get_version.outputs.tag }}
+          body_path: release_notes.md
           draft: false
           prerelease: false

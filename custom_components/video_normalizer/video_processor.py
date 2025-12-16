@@ -465,7 +465,13 @@ class VideoProcessor:
             _LOGGER.debug(
                 "Video already has correct aspect ratio: %.3f", current_aspect_ratio
             )
-            return True
+            # Copy input to output since no processing is needed
+            try:
+                shutil.copy2(video_path, output_video_path)
+                return True
+            except Exception as err:
+                _LOGGER.error("Failed to copy video file: %s", err)
+                return False
 
         _LOGGER.info(
             "Normalizing aspect ratio from %.3f to %.3f",
@@ -579,7 +585,13 @@ class VideoProcessor:
         # Check if resize is needed
         if new_width == current_width and new_height == current_height:
             _LOGGER.debug("Video already has target dimensions")
-            return True
+            # Copy input to output since no processing is needed
+            try:
+                shutil.copy2(video_path, output_video_path)
+                return True
+            except Exception as err:
+                _LOGGER.error("Failed to copy video file: %s", err)
+                return False
 
         _LOGGER.info(
             "Resizing video from %dx%d to %dx%d",

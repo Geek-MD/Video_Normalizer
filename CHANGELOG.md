@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2025-12-16
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed video processing failure when video already has correct aspect ratio or dimensions but needs other processing (e.g., thumbnail generation)
+  - Issue: When `normalize_aspect_ratio()` or `resize_video()` detected that processing wasn't needed, they returned `True` but didn't create the output file
+  - This caused subsequent operations to fail trying to read non-existent temporary files
+  - Error message: "Error opening input file /media/ring/ring.mp4.normalize.tmp. Error opening input files: No such file or directory"
+  - Solution: Both functions now copy the input file to the output path when no transformation is needed
+  - This ensures the processing pipeline always has a valid file to work with in subsequent steps
+- **Release Workflow Enhancement**: Updated GitHub Actions release workflow to automatically extract and include changelog notes from CHANGELOG.md in release descriptions
+  - Previous releases required manual addition of release notes
+  - Now automatically extracts the appropriate version section from CHANGELOG.md
+  - Falls back to default message if changelog section is not found
+
+### Technical
+
+- Updated `normalize_aspect_ratio()` to use `shutil.copy2()` when aspect ratio is already correct
+- Updated `resize_video()` to use `shutil.copy2()` when dimensions are already correct
+- Modified `.github/workflows/release.yml` to extract changelog and use `body_path` parameter
+- All code passes ruff linting and mypy type checking
+
 ## [0.5.1] - 2025-12-16
 
 ### Added
