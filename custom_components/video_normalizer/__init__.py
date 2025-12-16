@@ -16,7 +16,7 @@ from .video_processor import VideoProcessor
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "video_normalizer"
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 # Service constants
 SERVICE_NORMALIZE_VIDEO = "normalize_video"
@@ -53,6 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     video_processor = VideoProcessor()
     hass.data[DOMAIN]["processor"] = video_processor
     
+    # Set up sensor platform
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
     async def handle_normalize_video(call: ServiceCall) -> None:
         """Handle the normalize_video service call."""
         video_path = call.data["video_path"]
@@ -67,9 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         _LOGGER.info("Processing video: %s", video_path)
         
+        # Get sensor reference
+        sensor = hass.data[DOMAIN].get("sensor")
+        
+        # Set sensor to working state
+        if sensor:
+            sensor.set_working()
+        
+        # Track processes performed
+        processes_performed: list[str] = []
+        
         # Validate video file exists
         if not os.path.exists(video_path):
             _LOGGER.error("Video file not found: %s", video_path)
+            if sensor:
+                sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
@@ -93,18 +108,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 target_aspect_ratio=target_aspect_ratio,
             )
             
+            # Collect processes performed
+            if result.get("operations"):
+                for operation, success in result["operations"].items():
+                    if success:
+                        processes_performed.append(operation)
+            
             if result["success"]:
                 # Check if video was skipped (no processing needed)
                 if result.get("skipped", False):
                     _LOGGER.info(
                         "Video processing skipped (no changes needed): %s", video_path
                     )
+                    if sensor:
+                        sensor.set_idle("skipped", processes_performed)
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_skipped",
                         result,
                     )
                 else:
                     _LOGGER.info("Video processed successfully: %s", video_path)
+                    if sensor:
+                        sensor.set_idle("success", processes_performed)
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_processing_success",
                         result,
@@ -115,12 +140,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     video_path,
                     result.get("error", "Unknown error"),
                 )
+                if sensor:
+                    sensor.set_idle("failed", processes_performed)
                 hass.bus.async_fire(
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
         except Exception as err:
             _LOGGER.exception("Unexpected error processing video: %s", video_path)
+            if sensor:
+                sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
@@ -146,15 +175,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.info("Unloading Video Normalizer integration")
     
+    # Unload platforms
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    
+    if not unload_ok:
+        return False
+    
     # Unregister the service
     hass.services.async_remove(DOMAIN, SERVICE_NORMALIZE_VIDEO)
     
     if DOMAIN in hass.data:
         hass.data[DOMAIN].pop(entry.entry_id, None)
-        # Remove processor if it's the last entry
+        # Remove processor and sensor if it's the last entry
         if not any(
-            key for key in hass.data[DOMAIN].keys() if key != "processor"
+            key for key in hass.data[DOMAIN].keys() if key != "processor" and key != "sensor"
         ):
             hass.data[DOMAIN].pop("processor", None)
+            hass.data[DOMAIN].pop("sensor", None)
     
     return True
