@@ -100,7 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         # Validate video file exists
         if not os.path.exists(input_file_path):
-            _LOGGER.error("Video file not found: %s", input_file_path)
+            elapsed_time = time.time() - start_time
+            _LOGGER.error(
+                "Video file not found: %s - Elapsed time: %.2f seconds - Result: failed (file not found)",
+                input_file_path,
+                elapsed_time,
+            )
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
