@@ -156,6 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     if success:
                         processes_performed.append(operation)
             
+            # Get temp files for cleanup after sensor update
+            temp_files = result.get("temp_files", [])
+            
             if result["success"]:
                 # Check if video was skipped (no processing needed)
                 if result.get("skipped", False):
@@ -201,6 +204,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
+            
+            # Clean up temporary files after sensor state update
+            if temp_files:
+                video_processor.cleanup_temp_files(temp_files)
         except asyncio.TimeoutError:
             elapsed_time = time.time() - start_time
             _LOGGER.error(
@@ -219,6 +226,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": f"Processing timed out after {timeout} seconds",
                 },
             )
+            # Clean up any temp files that may have been created before timeout
+            video_processor.cleanup_temp_files_by_video_path(input_file_path)
         except Exception as err:
             elapsed_time = time.time() - start_time
             _LOGGER.exception(
@@ -236,6 +245,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": str(err),
                 },
             )
+            # Clean up any temp files that may have been created before exception
+            video_processor.cleanup_temp_files_by_video_path(input_file_path)
     
     # Register the service
     hass.services.async_register(

@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Solution: Modified temporary file naming to preserve the original video extension (e.g., `.mp4`) by using `os.path.splitext()` to separate base path from extension
   - Temporary files now follow the pattern: `base.operation.tmp.ext` (e.g., `ring.thumbnail.tmp.mp4` instead of `ring.mp4.thumbnail.tmp`)
   - This allows ffmpeg to correctly detect the output format for all processing operations
+- **Improved cleanup process**: Temporary files are now cleaned up after the sensor state is updated to idle
+  - Previously, temp files were deleted during video processing before the service completed
+  - Now temp files are cleaned up after the sensor transitions to idle state, ensuring proper service lifecycle
+  - Added `cleanup_temp_files()` method for explicit cleanup with known file list
+  - Added `cleanup_temp_files_by_video_path()` method for cleanup in case of timeout or exception when temp file list is not available
+  - Ensures all temporary files are properly removed in all scenarios (success, failure, timeout, exception)
 
 ### Technical
 
@@ -24,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Normalize aspect ratio operation: Now creates files like `video.normalize.tmp.mp4`
   - Thumbnail embedding operation: Now creates files like `video.thumbnail.tmp.mp4`
 - All temporary files maintain proper video extension at the end for ffmpeg format detection
+- Modified `process_video()` to return temp file list in results instead of cleaning up immediately
+- Service handler now calls cleanup methods after updating sensor to idle state
+- Added robust error handling for cleanup in timeout and exception scenarios
 - All code passes ruff linting and mypy type checking
 
 ## [0.5.3] - 2025-12-16

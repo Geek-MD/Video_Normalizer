@@ -28,6 +28,59 @@ class VideoProcessor:
         self.ffmpeg_path = ffmpeg_path
         self.ffprobe_path = ffprobe_path
 
+    def cleanup_temp_files(self, temp_files: list[str]) -> None:
+        """Clean up temporary files after processing is complete.
+        
+        This should be called after the sensor state has been updated to idle,
+        ensuring that the cleanup happens after the service completes.
+        
+        Args:
+            temp_files: List of temporary file paths to remove
+        """
+        if not temp_files:
+            return
+            
+        _LOGGER.debug("Cleaning up %d temporary file(s)", len(temp_files))
+        
+        for temp_file in temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    _LOGGER.debug("Removed temporary file: %s", temp_file)
+            except Exception as err:
+                _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
+
+    def cleanup_temp_files_by_video_path(self, video_path: str) -> None:
+        """Clean up temporary files based on the original video path.
+        
+        This is used when processing fails or times out and we don't have
+        the full list of temp files, but need to clean up any that may exist.
+        
+        Args:
+            video_path: Original video file path
+        """
+        base_path, ext = os.path.splitext(video_path)
+        video_dir = os.path.dirname(video_path)
+        video_name = os.path.splitext(os.path.basename(video_path))[0]
+        
+        # List of possible temp files that could be created
+        possible_temp_files = [
+            f"{base_path}.resize.tmp{ext}",
+            f"{base_path}.normalize.tmp{ext}",
+            f"{base_path}.thumbnail.tmp{ext}",
+            os.path.join(video_dir, f"{video_name}_thumb.jpg"),
+        ]
+        
+        _LOGGER.debug("Attempting cleanup of potential temp files for: %s", video_path)
+        
+        for temp_file in possible_temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    _LOGGER.debug("Removed temporary file: %s", temp_file)
+            except Exception as err:
+                _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
+
     async def get_video_dimensions(self, video_path: str) -> dict[str, Any]:
         """Get video dimensions using ffprobe with ffmpeg fallback.
         
@@ -801,10 +854,10 @@ class VideoProcessor:
             if current_video != video_path:
                 # We have a processed video
                 if overwrite:
-                    # Replace original
+                    # Replace original (moves the file, so it no longer exists as temp)
                     os.replace(current_video, final_output_path)
                 else:
-                    # Copy to output path
+                    # Copy to output path (temp file still exists and needs cleanup)
                     shutil.copy2(current_video, final_output_path)
                     
                 results["output_path"] = final_output_path
@@ -816,14 +869,8 @@ class VideoProcessor:
                 # No processing and overwrite mode
                 results["output_path"] = video_path
 
-            # Clean up temporary files (but preserve the currently active processed video)
-            for temp_file in temp_files:
-                try:
-                    # Skip files that don't exist or are still being used as current_video
-                    if os.path.exists(temp_file) and temp_file != current_video:
-                        os.remove(temp_file)
-                except Exception as err:
-                    _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
+            # Store temp files list in results for cleanup after sensor state update
+            results["temp_files"] = temp_files
 
             # Get final video information
             final_info = await self.get_video_dimensions(results["output_path"])
