@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 
 import voluptuous as vol
 
@@ -84,6 +85,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         _LOGGER.info("Processing video: %s (timeout: %d seconds)", input_file_path, timeout)
         
+        # Track start time for performance logging
+        start_time = time.time()
+        
         # Get sensor reference
         sensor = hass.data[DOMAIN].get("sensor")
         
@@ -150,8 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if result["success"]:
                 # Check if video was skipped (no processing needed)
                 if result.get("skipped", False):
+                    elapsed_time = time.time() - start_time
                     _LOGGER.info(
-                        "Video processing skipped (no changes needed): %s", input_file_path
+                        "Video processing skipped (no changes needed): %s - "
+                        "Elapsed time: %.2f seconds - Result: skipped",
+                        input_file_path,
+                        elapsed_time,
                     )
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -160,7 +168,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         result,
                     )
                 else:
-                    _LOGGER.info("Video processed successfully: %s", input_file_path)
+                    elapsed_time = time.time() - start_time
+                    _LOGGER.info(
+                        "Video processed successfully: %s - "
+                        "Elapsed time: %.2f seconds - Result: success",
+                        input_file_path,
+                        elapsed_time,
+                    )
                     if sensor:
                         sensor.set_idle("success", processes_performed)
                     hass.bus.async_fire(
@@ -168,10 +182,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         result,
                     )
             else:
+                elapsed_time = time.time() - start_time
                 _LOGGER.error(
-                    "Video processing failed: %s - %s",
+                    "Video processing failed: %s - %s - "
+                    "Elapsed time: %.2f seconds - Result: failed",
                     input_file_path,
                     result.get("error", "Unknown error"),
+                    elapsed_time,
                 )
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
@@ -180,10 +197,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     result,
                 )
         except asyncio.TimeoutError:
+            elapsed_time = time.time() - start_time
             _LOGGER.error(
-                "Video processing timed out after %d seconds: %s",
+                "Video processing timed out after %d seconds: %s - "
+                "Elapsed time: %.2f seconds - Result: failed (timeout)",
                 timeout,
                 input_file_path,
+                elapsed_time,
             )
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -195,7 +215,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
         except Exception as err:
-            _LOGGER.exception("Unexpected error processing video: %s", input_file_path)
+            elapsed_time = time.time() - start_time
+            _LOGGER.exception(
+                "Unexpected error processing video: %s - "
+                "Elapsed time: %.2f seconds - Result: failed (exception)",
+                input_file_path,
+                elapsed_time,
+            )
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(

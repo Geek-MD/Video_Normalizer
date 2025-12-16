@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Logs timeout events with clear error messages
   - Fires `video_normalizer_video_processing_failed` event with timeout error details
   - Sensor updates to "failed" state when timeout occurs
+- **Performance Logging**: Added elapsed time tracking for all video processing operations
+  - Logs total processing time for every video (success, skipped, failed, timeout)
+  - Format: "Elapsed time: X.XX seconds - Result: [success|skipped|failed]"
+  - Helps gather real-world performance data to optimize timeout defaults in future versions
+  - Provides visibility into processing performance on different hardware
 - Default timeout of 300 seconds (5 minutes) optimized for Home Assistant Green hardware:
   - Home Assistant Green specs: Rockchip RK3566 (Quad-core ARM Cortex-A55 @ 1.8 GHz), 4 GB RAM
   - Typical processing times on Home Assistant Green:
@@ -30,16 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced service handler to wrap video processing with `asyncio.wait_for()` for timeout enforcement
 - Configuration flow now includes timeout field with validation (minimum 1 second)
 - Integration setup stores timeout configuration for use across service calls
+- Improved logging messages to include elapsed time and result status for all operations
+- Enhanced error logging with detailed timing information for troubleshooting
 
 ### Technical
 
 - Added `CONF_TIMEOUT` and `DEFAULT_TIMEOUT` constants to const.py
 - Updated service schema to accept optional timeout parameter
 - Improved error handling with specific timeout exception catching
+- Added `time` module import for performance tracking
 - Removed redundant validation logic (handled by voluptuous schema)
 - All code passes ruff linting and mypy type checking
 - CodeQL security scan: 0 vulnerabilities
 - Updated translations (English and Spanish) to include timeout configuration
+- Updated README.md with timeout documentation
 
 ## [0.5.0] - 2025-12-16
 

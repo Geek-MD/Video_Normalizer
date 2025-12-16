@@ -71,6 +71,7 @@ During setup, you'll need to configure:
 - **Intelligent skip logic** - skips processing if video already meets requirements (unless resize is requested)
 - **Robust detection of video dimensions** using ffprobe (JSON) with ffmpeg -i fallback
 - **Processing timeout protection** - configurable timeout (default: 5 minutes) prevents indefinite hangs on corrupted or extremely large files
+- **Performance logging** - logs elapsed time for all processing operations to help optimize timeout settings
 - Emits automation-friendly events on video processing success, failure, or skip
 - Easy setup through the Home Assistant UI
 
