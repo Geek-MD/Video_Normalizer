@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     if success:
                         processes_performed.append(operation)
             
-            # Get temp files for cleanup after sensor update
+            # Get temp files for cleanup after sensor update and event firing
             temp_files = result.get("temp_files", [])
             
             if result["success"]:
@@ -169,8 +169,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         input_file_path,
                         elapsed_time,
                     )
+                    # Update sensor state to idle before event and cleanup
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
+                    # Fire event before cleanup
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_skipped",
                         result,
@@ -183,8 +185,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         input_file_path,
                         elapsed_time,
                     )
+                    # Update sensor state to idle before event and cleanup
                     if sensor:
                         sensor.set_idle("success", processes_performed)
+                    # Fire event before cleanup
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_processing_success",
                         result,
@@ -198,14 +202,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     result.get("error", "Unknown error"),
                     elapsed_time,
                 )
+                # Update sensor state to idle before event and cleanup
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
+                # Fire event before cleanup
                 hass.bus.async_fire(
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
             
-            # Clean up temporary files after sensor state update
+            # Clean up temporary files AFTER sensor state update and event firing
+            # This ensures proper service lifecycle: process → update sensor → fire events → cleanup
             if temp_files:
                 video_processor.cleanup_temp_files(temp_files)
         except asyncio.TimeoutError:
@@ -217,8 +224,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
+            # Update sensor state to idle before event and cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
+            # Fire event before cleanup
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
@@ -227,6 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             # Clean up any temp files that may have been created before timeout
+            # This happens AFTER sensor state update and event firing
             video_processor.cleanup_temp_files_by_video_path(input_file_path)
         except Exception as err:
             elapsed_time = time.time() - start_time
@@ -236,8 +246,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
+            # Update sensor state to idle before event and cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
+            # Fire event before cleanup
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
@@ -246,6 +258,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             # Clean up any temp files that may have been created before exception
+            # This happens AFTER sensor state update and event firing
             video_processor.cleanup_temp_files_by_video_path(input_file_path)
     
     # Register the service
