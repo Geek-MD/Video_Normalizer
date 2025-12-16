@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2025-12-16
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed event firing order in early return path (file not found validation)
+  - Issue: When a video file was not found, the sensor state was being updated before the event was fired
+  - This caused automations waiting for `video_normalizer_video_processing_failed` event to not trigger properly
+  - The bug was inconsistent with the rest of the codebase where events are always fired before sensor updates
+  - Solution: Swapped the order to fire the event first, then update the sensor state
+  - Now follows the correct service lifecycle documented in v0.5.4: process → fire events → update sensor → cleanup
+- **Critical Bug Fix**: Added event loop yield after firing events to ensure proper event processing
+  - Issue: Events were being scheduled but the service could complete before the event loop processed them
+  - This caused a race condition where automations might miss events
+  - Solution: Added `await asyncio.sleep(0)` after each `hass.bus.async_fire()` call
+  - This yields control to the event loop, ensuring events are processed before the service continues
+  - Applied to all six event firing locations for consistency
+
+### Technical
+
+- Updated event firing order in file validation path (file not found early return)
+- Event now fires before `sensor.set_idle()` is called, consistent with all other code paths
+- Added `_ensure_event_processed()` helper function to yield to the event loop after event firing
+- Applied helper function to all six event firing locations for consistency:
+  - File not found validation
+  - Video skipped (no processing needed)
+  - Video processing success
+  - Video processing failed (error during processing)
+  - Timeout error handler
+  - Exception error handler
+- Added comprehensive docstring explaining the purpose of the event loop yield
+- All code maintains consistency with the service lifecycle order
+- Prevents race conditions between event firing and service completion
+
 ## [0.5.4] - 2025-12-16
 
 ### Fixed
