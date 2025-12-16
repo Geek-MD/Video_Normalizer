@@ -155,6 +155,48 @@ The service fires events that can be used in automations:
 - `video_normalizer_video_skipped`: Fired when video processing is skipped because the video already meets all requirements (no changes needed)
 - `video_normalizer_video_processing_failed`: Fired when video processing fails
 
+## Service Lifecycle
+
+When the `video_normalizer.normalize_video` service is called, it follows a specific lifecycle to ensure proper operation and state management:
+
+1. **Process Video**: The video is processed according to the specified parameters (resize, normalize aspect ratio, generate thumbnail, etc.)
+2. **Fire Events**: Home Assistant events are fired to notify automations of the processing result (`video_processing_success`, `video_skipped`, or `video_processing_failed`)
+3. **Update Sensor**: The status sensor is updated to `idle` state with the appropriate result (`success`, `skipped`, or `failed`)
+4. **Cleanup**: Temporary files created during processing are removed
+
+This order ensures that:
+- Automations receive events before the sensor state changes, allowing them to react to the event first
+- The sensor state accurately reflects when processing is complete before cleanup begins
+- Temporary files are cleaned up only after all state updates and notifications are complete
+
+**Example of lifecycle in an automation:**
+
+```yaml
+automation:
+  - alias: "Process video and send notification"
+    trigger:
+      - platform: event
+        event_type: video_normalizer_video_processing_success
+    action:
+      # This action runs immediately after processing, before sensor updates
+      - service: notify.mobile_app
+        data:
+          title: "Video Ready"
+          message: "Processing complete for {{ trigger.event.data.video_path }}"
+      
+  - alias: "Monitor sensor state change"
+    trigger:
+      - platform: state
+        entity_id: sensor.video_normalizer_status
+        to: "idle"
+    action:
+      # This action runs after the event has been fired
+      - service: notify.mobile_app
+        data:
+          title: "Video Normalizer Idle"
+          message: "Status: {{ state_attr('sensor.video_normalizer_status', 'last_job') }}"
+```
+
 ## Requirements
 
 This integration requires:
