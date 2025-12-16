@@ -1,7 +1,7 @@
 """Sensor platform for Video Normalizer integration."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -65,7 +65,7 @@ class VideoNormalizerSensor(SensorEntity):
     def set_working(self) -> None:
         """Set sensor to working state."""
         self._attr_native_value = STATE_WORKING
-        self._attr_extra_state_attributes["timestamp"] = datetime.now().isoformat()
+        self._attr_extra_state_attributes["timestamp"] = datetime.now(timezone.utc).isoformat()
         self._attr_extra_state_attributes["processes"] = []
         self.async_write_ha_state()
         _LOGGER.info("Video Normalizer sensor state: working")
@@ -84,7 +84,7 @@ class VideoNormalizerSensor(SensorEntity):
         """
         self._attr_native_value = STATE_IDLE
         self._attr_extra_state_attributes["last_job"] = job_result
-        self._attr_extra_state_attributes["timestamp"] = datetime.now().isoformat()
+        self._attr_extra_state_attributes["timestamp"] = datetime.now(timezone.utc).isoformat()
         self._attr_extra_state_attributes["processes"] = processes or []
         self.async_write_ha_state()
         _LOGGER.info(

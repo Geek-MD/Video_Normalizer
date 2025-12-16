@@ -24,9 +24,8 @@ SERVICE_NORMALIZE_VIDEO = "normalize_video"
 # Service schema
 SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
     {
-        vol.Required("video_path"): cv.string,
-        vol.Optional("output_path"): cv.string,
-        vol.Optional("output_name"): cv.string,
+        vol.Required("input_file_path"): cv.string,
+        vol.Optional("output_file_path"): cv.string,
         vol.Optional("overwrite", default=False): cv.boolean,
         vol.Optional("normalize_aspect", default=True): cv.boolean,
         vol.Optional("generate_thumbnail", default=True): cv.boolean,
@@ -58,9 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     async def handle_normalize_video(call: ServiceCall) -> None:
         """Handle the normalize_video service call."""
-        video_path = call.data["video_path"]
-        output_path = call.data.get("output_path")
-        output_name = call.data.get("output_name")
+        input_file_path = call.data["input_file_path"]
+        output_file_path = call.data.get("output_file_path")
         overwrite = call.data.get("overwrite", False)
         normalize_aspect = call.data.get("normalize_aspect", True)
         generate_thumbnail = call.data.get("generate_thumbnail", True)
@@ -68,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resize_height = call.data.get("resize_height")
         target_aspect_ratio = call.data.get("target_aspect_ratio")
         
-        _LOGGER.info("Processing video: %s", video_path)
+        _LOGGER.info("Processing video: %s", input_file_path)
         
         # Get sensor reference
         sensor = hass.data[DOMAIN].get("sensor")
@@ -81,23 +79,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         processes_performed: list[str] = []
         
         # Validate video file exists
-        if not os.path.exists(video_path):
-            _LOGGER.error("Video file not found: %s", video_path)
+        if not os.path.exists(input_file_path):
+            _LOGGER.error("Video file not found: %s", input_file_path)
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
-                    "video_path": video_path,
+                    "video_path": input_file_path,
                     "error": "Video file not found",
                 },
             )
             return
         
+        # Parse output_file_path to extract output_path and output_name
+        # When overwrite is True, output_file_path is ignored
+        if overwrite:
+            output_path = None
+            output_name = None
+        elif output_file_path:
+            # Split the full path into directory and filename
+            output_path = os.path.dirname(output_file_path)
+            output_name = os.path.basename(output_file_path)
+        else:
+            # No output specified and not overwriting - use same as input
+            output_path = None
+            output_name = None
+        
         # Process the video
         try:
             result = await video_processor.process_video(
-                video_path=video_path,
+                video_path=input_file_path,
                 output_path=output_path,
                 output_name=output_name,
                 overwrite=overwrite,
@@ -118,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 # Check if video was skipped (no processing needed)
                 if result.get("skipped", False):
                     _LOGGER.info(
-                        "Video processing skipped (no changes needed): %s", video_path
+                        "Video processing skipped (no changes needed): %s", input_file_path
                     )
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -127,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         result,
                     )
                 else:
-                    _LOGGER.info("Video processed successfully: %s", video_path)
+                    _LOGGER.info("Video processed successfully: %s", input_file_path)
                     if sensor:
                         sensor.set_idle("success", processes_performed)
                     hass.bus.async_fire(
@@ -137,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 _LOGGER.error(
                     "Video processing failed: %s - %s",
-                    video_path,
+                    input_file_path,
                     result.get("error", "Unknown error"),
                 )
                 if sensor:
@@ -147,13 +159,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     result,
                 )
         except Exception as err:
-            _LOGGER.exception("Unexpected error processing video: %s", video_path)
+            _LOGGER.exception("Unexpected error processing video: %s", input_file_path)
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
                 f"{DOMAIN}_video_processing_failed",
                 {
-                    "video_path": video_path,
+                    "video_path": input_file_path,
                     "error": str(err),
                 },
             )

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.2] - 2025-12-16
+## [0.5.0] - 2025-12-16
 
 ### Added
 
@@ -13,22 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sensor states: `working` (when processing video) and `idle` (when processing complete or not running)
   - Sensor attributes:
     - `last_job`: Result of the last job ("success", "skipped", or "failed")
-    - `timestamp`: ISO 8601 timestamp of when the state last changed
+    - `timestamp`: ISO 8601 UTC timestamp of when the state last changed
     - `processes`: List of subprocesses that were performed (e.g., ["resize", "normalize_aspect", "embed_thumbnail"])
   - Dynamic icon that changes based on state (video-check when working, video-check-outline when idle)
 - Enhanced logging for sensor state changes
 
 ### Changed
 
-- Updated integration version to 0.4.2 in manifest.json
+- **BREAKING**: Service parameter names updated for better clarity:
+  - `video_path` renamed to `input_file_path` - Now expects full file path including filename (e.g., "/media/ring/ring.mp4")
+  - `output_path` and `output_name` consolidated into single `output_file_path` parameter - Expects full file path including filename (e.g., "/media/processed/ring_normalized.mp4")
+  - `output_file_path` is only required when `overwrite` is false
+  - When `overwrite` is true, the input file path is used automatically
+- Updated integration version to 0.5.0 in manifest.json
 - Service handler now updates sensor state during video processing
 - Sensor platform automatically registered during integration setup
+- Timestamps now use UTC timezone for consistency
 
 ### Technical
 
-- All changes maintain backward compatibility
 - New sensor.py module with VideoNormalizerSensor class
 - Integration follows Home Assistant sensor entity best practices
+- Service schema updated to reflect new parameter structure
+- All code passes ruff linting and mypy type checking
+- Improved service parameter handling and validation
 
 ## [0.4.1] - 2025-12-05
 
