@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, DOWNLOADER_DOMAIN, CONF_DOWNLOAD_DIR
+from .const import DOMAIN, DOWNLOADER_DOMAIN, CONF_DOWNLOAD_DIR, CONF_TIMEOUT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +103,7 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
 
         if user_input is not None:
             download_dir = user_input.get(CONF_DOWNLOAD_DIR, "").strip()
+            timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
             
             if not download_dir:
                 errors[CONF_DOWNLOAD_DIR] = "download_dir_required"
@@ -112,6 +113,7 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
                     title="Video Normalizer",
                     data={
                         CONF_DOWNLOAD_DIR: download_dir,
+                        CONF_TIMEOUT: timeout,
                     },
                 )
 
@@ -126,6 +128,9 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DOWNLOAD_DIR, default=default_download_dir): str,
+                    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ),
             errors=errors,

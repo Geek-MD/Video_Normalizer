@@ -51,7 +51,9 @@ This integration works independently but is recommended to be used with the [Dow
 
 ## Configuration
 
-During setup, you'll need to configure the download directory where videos are located. If the Downloader integration is installed, this field will be automatically pre-filled with its configured directory.
+During setup, you'll need to configure:
+- **Download directory**: Where videos to be processed are located. If the Downloader integration is installed, this field will be automatically pre-filled with its configured directory.
+- **Processing timeout** (optional, default: 300 seconds / 5 minutes): Maximum time to wait for video processing to complete. Optimized for Home Assistant Green hardware specifications (Rockchip RK3566, 4 GB RAM). Increase this value if you frequently process longer or higher-resolution videos.
 
 ## Features
 
@@ -68,6 +70,8 @@ During setup, you'll need to configure the download directory where videos are l
 - **Optional video resizing** (width/height) if dimensions differ
 - **Intelligent skip logic** - skips processing if video already meets requirements (unless resize is requested)
 - **Robust detection of video dimensions** using ffprobe (JSON) with ffmpeg -i fallback
+- **Processing timeout protection** - configurable timeout (default: 5 minutes) prevents indefinite hangs on corrupted or extremely large files
+- **Performance logging** - logs elapsed time for all processing operations to help optimize timeout settings
 - Emits automation-friendly events on video processing success, failure, or skip
 - Easy setup through the Home Assistant UI
 
@@ -83,9 +87,10 @@ Process a video file with normalization operations.
 - `overwrite` (optional, default: false): Whether to overwrite the original file. When true, `output_file_path` is ignored
 - `normalize_aspect` (optional, default: true): Whether to normalize the aspect ratio to 16:9
 - `generate_thumbnail` (optional, default: true): Whether to generate and embed a thumbnail
-- `resize_width` (optional): Target width for resizing (maintains aspect ratio if only one dimension specified)
-- `resize_height` (optional): Target height for resizing (maintains aspect ratio if only one dimension specified)
-- `target_aspect_ratio` (optional, default: 1.777): Target aspect ratio as a decimal (e.g., 1.777 for 16:9, 1.333 for 4:3)
+- **resize_width** (optional): Target width for resizing (maintains aspect ratio if only one dimension specified)
+- **resize_height** (optional): Target height for resizing (maintains aspect ratio if only one dimension specified)
+- **target_aspect_ratio** (optional, default: 1.777): Target aspect ratio as a decimal (e.g., 1.777 for 16:9, 1.333 for 4:3)
+- **timeout** (optional, default: 300): Maximum time in seconds to wait for processing to complete. If processing takes longer, it will be terminated. Default of 5 minutes is optimized for Home Assistant Green. Increase for longer videos or higher resolutions.
 
 **Example automation:**
 

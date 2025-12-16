@@ -10,7 +10,8 @@
         "title": "Configuración - Video Normalizer",
         "description": "Configura el directorio de descargas donde se encuentran los videos a procesar.\n\nSi tienes Downloader instalado, este campo se pre-llenará automáticamente con el directorio configurado en Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
         "data": {
-          "download_dir": "Directorio de Descargas"
+          "download_dir": "Directorio de Descargas",
+          "timeout": "Tiempo de Espera del Procesamiento (segundos)"
         }
       }
     },

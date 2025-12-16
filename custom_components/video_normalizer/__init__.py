@@ -1,8 +1,10 @@
 """The Video Normalizer integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+import time
 
 import voluptuous as vol
 
@@ -11,6 +13,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
+from .const import CONF_TIMEOUT, DEFAULT_TIMEOUT
 from .video_processor import VideoProcessor
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +37,9 @@ SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
         vol.Optional("target_aspect_ratio"): vol.All(
             vol.Coerce(float), vol.Range(min=0.1, max=10.0)
         ),
+        vol.Optional("timeout"): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
     }
 )
 
@@ -42,10 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Video Normalizer from a config entry."""
     _LOGGER.info("Setting up Video Normalizer integration")
     
-    # Store the download directory from config
+    # Store the download directory and timeout from config
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "download_dir": entry.data.get("download_dir"),
+        "timeout": entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     }
     
     # Initialize video processor
@@ -66,7 +73,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resize_height = call.data.get("resize_height")
         target_aspect_ratio = call.data.get("target_aspect_ratio")
         
-        _LOGGER.info("Processing video: %s", input_file_path)
+        # Get timeout from service call or use configured default
+        timeout = call.data.get("timeout")
+        if timeout is None:
+            # Use the configured timeout from the entry
+            timeout = DEFAULT_TIMEOUT
+            for entry_id, entry_data in hass.data[DOMAIN].items():
+                if isinstance(entry_data, dict) and CONF_TIMEOUT in entry_data:
+                    timeout = entry_data[CONF_TIMEOUT]
+                    break
+        
+        _LOGGER.info("Processing video: %s (timeout: %d seconds)", input_file_path, timeout)
+        
+        # Track start time for performance logging
+        start_time = time.time()
         
         # Get sensor reference
         sensor = hass.data[DOMAIN].get("sensor")
@@ -80,7 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         # Validate video file exists
         if not os.path.exists(input_file_path):
-            _LOGGER.error("Video file not found: %s", input_file_path)
+            elapsed_time = time.time() - start_time
+            _LOGGER.error(
+                "Video file not found: %s - Elapsed time: %.2f seconds - Result: failed (file not found)",
+                input_file_path,
+                elapsed_time,
+            )
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
@@ -108,18 +133,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             output_path = None
             output_name = None
         
-        # Process the video
+        # Process the video with timeout
         try:
-            result = await video_processor.process_video(
-                video_path=input_file_path,
-                output_path=output_path,
-                output_name=output_name,
-                overwrite=overwrite,
-                normalize_aspect=normalize_aspect,
-                generate_thumbnail=generate_thumbnail,
-                resize_width=resize_width,
-                resize_height=resize_height,
-                target_aspect_ratio=target_aspect_ratio,
+            result = await asyncio.wait_for(
+                video_processor.process_video(
+                    video_path=input_file_path,
+                    output_path=output_path,
+                    output_name=output_name,
+                    overwrite=overwrite,
+                    normalize_aspect=normalize_aspect,
+                    generate_thumbnail=generate_thumbnail,
+                    resize_width=resize_width,
+                    resize_height=resize_height,
+                    target_aspect_ratio=target_aspect_ratio,
+                ),
+                timeout=timeout,
             )
             
             # Collect processes performed
@@ -131,8 +159,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if result["success"]:
                 # Check if video was skipped (no processing needed)
                 if result.get("skipped", False):
+                    elapsed_time = time.time() - start_time
                     _LOGGER.info(
-                        "Video processing skipped (no changes needed): %s", input_file_path
+                        "Video processing skipped (no changes needed): %s - "
+                        "Elapsed time: %.2f seconds - Result: skipped",
+                        input_file_path,
+                        elapsed_time,
                     )
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -141,7 +173,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         result,
                     )
                 else:
-                    _LOGGER.info("Video processed successfully: %s", input_file_path)
+                    elapsed_time = time.time() - start_time
+                    _LOGGER.info(
+                        "Video processed successfully: %s - "
+                        "Elapsed time: %.2f seconds - Result: success",
+                        input_file_path,
+                        elapsed_time,
+                    )
                     if sensor:
                         sensor.set_idle("success", processes_performed)
                     hass.bus.async_fire(
@@ -149,10 +187,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         result,
                     )
             else:
+                elapsed_time = time.time() - start_time
                 _LOGGER.error(
-                    "Video processing failed: %s - %s",
+                    "Video processing failed: %s - %s - "
+                    "Elapsed time: %.2f seconds - Result: failed",
                     input_file_path,
                     result.get("error", "Unknown error"),
+                    elapsed_time,
                 )
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
@@ -160,8 +201,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
+        except asyncio.TimeoutError:
+            elapsed_time = time.time() - start_time
+            _LOGGER.error(
+                "Video processing timed out after %d seconds: %s - "
+                "Elapsed time: %.2f seconds - Result: failed (timeout)",
+                timeout,
+                input_file_path,
+                elapsed_time,
+            )
+            if sensor:
+                sensor.set_idle("failed", processes_performed)
+            hass.bus.async_fire(
+                f"{DOMAIN}_video_processing_failed",
+                {
+                    "video_path": input_file_path,
+                    "error": f"Processing timed out after {timeout} seconds",
+                },
+            )
         except Exception as err:
-            _LOGGER.exception("Unexpected error processing video: %s", input_file_path)
+            elapsed_time = time.time() - start_time
+            _LOGGER.exception(
+                "Unexpected error processing video: %s - "
+                "Elapsed time: %.2f seconds - Result: failed (exception)",
+                input_file_path,
+                elapsed_time,
+            )
             if sensor:
                 sensor.set_idle("failed", processes_performed)
             hass.bus.async_fire(
