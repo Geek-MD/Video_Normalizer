@@ -36,11 +36,15 @@ jobs:
           
           # Extract the changelog section for this version
           # This reads from the first occurrence of [VERSION] to the next ## heading
+          # Pattern explanation:
+          #   - /## \[$VERSION\]/  : Start at the heading for this version
+          #   - /^## \[/           : Continue until we hit another version heading
+          #   - sed '1d'           : Remove the first line (the version heading itself)
           CHANGELOG=$(awk "/## \[$VERSION\]/,/^## \[/ {if (/^## \[/ && !/## \[$VERSION\]/) exit; print}" CHANGELOG.md | sed '1d')
           
           # If changelog is empty, use a default message
           if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="Release version $VERSION"
+            CHANGELOG="Release version $VERSION - See [CHANGELOG.md](https://github.com/Geek-MD/Video_Normalizer/blob/main/CHANGELOG.md) for details"
           fi
           
           # Save to file to preserve formatting
