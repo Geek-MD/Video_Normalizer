@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2025-12-16
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed ffmpeg thumbnail embedding failure due to improper temporary file extensions
+  - Issue: Temporary files were being created with extensions like `.tmp`, `.resize.tmp`, `.normalize.tmp`, or `.thumbnail.tmp` instead of maintaining the original video extension
+  - This caused ffmpeg to fail with error: "Unable to choose an output format for '/media/ring/ring.mp4.thumbnail.tmp'; use a standard extension for the filename or specify the format manually"
+  - Error occurred at line 417 in video_processor.py when calling `embed_thumbnail()`
+  - Solution: Modified temporary file naming to preserve the original video extension (e.g., `.mp4`) by using `os.path.splitext()` to separate base path from extension
+  - Temporary files now follow the pattern: `base.operation.tmp.ext` (e.g., `ring.thumbnail.tmp.mp4` instead of `ring.mp4.thumbnail.tmp`)
+  - This allows ffmpeg to correctly detect the output format for all processing operations
+
+### Technical
+
+- Updated temporary file naming logic in three operations:
+  - Resize operation: Now creates files like `video.resize.tmp.mp4`
+  - Normalize aspect ratio operation: Now creates files like `video.normalize.tmp.mp4`
+  - Thumbnail embedding operation: Now creates files like `video.thumbnail.tmp.mp4`
+- All temporary files maintain proper video extension at the end for ffmpeg format detection
+- All code passes ruff linting and mypy type checking
+
 ## [0.5.3] - 2025-12-16
 
 ### Fixed
