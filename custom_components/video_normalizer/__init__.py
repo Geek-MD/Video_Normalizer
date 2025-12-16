@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
         
         # Parse output_file_path to extract output_path and output_name
-        # When overwrite is True, output_file_path is ignored
+        # When overwrite is True, output_file_path is ignored and we use input path
         if overwrite:
             output_path = None
             output_name = None
@@ -102,7 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             output_path = os.path.dirname(output_file_path)
             output_name = os.path.basename(output_file_path)
         else:
-            # No output specified and not overwriting - use same as input
+            # No output specified and not overwriting
+            # This will cause the video processor to use the same directory/name as input
+            # which effectively creates a copy with the same name in the same location
             output_path = None
             output_name = None
         

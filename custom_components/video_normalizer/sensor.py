@@ -1,7 +1,7 @@
 """Sensor platform for Video Normalizer integration."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -16,11 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor states
 STATE_WORKING = "working"
 STATE_IDLE = "idle"
-
-# Job result types
-JOB_SUCCESS = "success"
-JOB_SKIPPED = "skipped"
-JOB_FAILED = "failed"
 
 
 async def async_setup_entry(
@@ -65,7 +60,7 @@ class VideoNormalizerSensor(SensorEntity):
     def set_working(self) -> None:
         """Set sensor to working state."""
         self._attr_native_value = STATE_WORKING
-        self._attr_extra_state_attributes["timestamp"] = datetime.now(timezone.utc).isoformat()
+        self._attr_extra_state_attributes["timestamp"] = datetime.now().isoformat()
         self._attr_extra_state_attributes["processes"] = []
         self.async_write_ha_state()
         _LOGGER.info("Video Normalizer sensor state: working")
@@ -84,7 +79,7 @@ class VideoNormalizerSensor(SensorEntity):
         """
         self._attr_native_value = STATE_IDLE
         self._attr_extra_state_attributes["last_job"] = job_result
-        self._attr_extra_state_attributes["timestamp"] = datetime.now(timezone.utc).isoformat()
+        self._attr_extra_state_attributes["timestamp"] = datetime.now().isoformat()
         self._attr_extra_state_attributes["processes"] = processes or []
         self.async_write_ha_state()
         _LOGGER.info(
@@ -99,9 +94,6 @@ class VideoNormalizerSensor(SensorEntity):
         Args:
             process_name: Name of the process being performed
         """
-        if "processes" not in self._attr_extra_state_attributes:
-            self._attr_extra_state_attributes["processes"] = []
-        
         processes = self._attr_extra_state_attributes["processes"]
         if isinstance(processes, list):
             processes.append(process_name)

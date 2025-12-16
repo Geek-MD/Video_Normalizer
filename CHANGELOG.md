@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sensor states: `working` (when processing video) and `idle` (when processing complete or not running)
   - Sensor attributes:
     - `last_job`: Result of the last job ("success", "skipped", or "failed")
-    - `timestamp`: ISO 8601 UTC timestamp of when the state last changed
+    - `timestamp`: ISO 8601 timestamp of when the state last changed (using Home Assistant server local time)
     - `processes`: List of subprocesses that were performed (e.g., ["resize", "normalize_aspect", "embed_thumbnail"])
   - Dynamic icon that changes based on state (video-check when working, video-check-outline when idle)
 - Enhanced logging for sensor state changes
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated integration version to 0.5.0 in manifest.json
 - Service handler now updates sensor state during video processing
 - Sensor platform automatically registered during integration setup
-- Timestamps now use UTC timezone for consistency
+- Timestamps now use Home Assistant server local time
 
 ### Technical
 
@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Service schema updated to reflect new parameter structure
 - All code passes ruff linting and mypy type checking
 - Improved service parameter handling and validation
+- Added entity translations for sensor in English and Spanish
 
 ## [0.4.1] - 2025-12-05
 
