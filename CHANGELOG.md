@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-12-16
+
+### Added
+
+- **Processing Timeout**: New timeout parameter to prevent indefinite hangs during video processing
+  - Configurable timeout parameter in integration setup (default: 600 seconds / 10 minutes)
+  - Optional timeout parameter in `normalize_video` service call to override configured default
+  - Automatically terminates processing if it exceeds the timeout
+  - Logs timeout events with clear error messages
+  - Fires `video_normalizer_video_processing_failed` event with timeout error details
+  - Sensor updates to "failed" state when timeout occurs
+- Default timeout of 600 seconds (10 minutes) should handle most typical video processing scenarios:
+  - Short surveillance videos (1-5 min, 720p-1080p): ~30-120 seconds
+  - Medium videos (5-10 min, 1080p): ~2-5 minutes
+  - Longer videos or 4K content: ~5-10 minutes
+  - Timeout prevents indefinite hangs on corrupted or extremely large files
+
+### Changed
+
+- Updated integration version to 0.5.1 in manifest.json
+- Enhanced service handler to wrap video processing with `asyncio.wait_for()` for timeout enforcement
+- Configuration flow now includes timeout field with validation (minimum 1 second)
+- Integration setup stores timeout configuration for use across service calls
+
+### Technical
+
+- Added `CONF_TIMEOUT` and `DEFAULT_TIMEOUT` constants to const.py
+- Updated service schema to accept optional timeout parameter
+- Improved error handling with specific timeout exception catching
+- Added timeout validation in config flow (must be positive integer)
+- All code passes ruff linting and mypy type checking
+- Updated translations (English and Spanish) to include timeout configuration
+
 ## [0.5.0] - 2025-12-16
 
 ### Added

@@ -1,6 +1,7 @@
 """The Video Normalizer integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
+from .const import CONF_TIMEOUT, DEFAULT_TIMEOUT
 from .video_processor import VideoProcessor
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +36,9 @@ SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
         vol.Optional("target_aspect_ratio"): vol.All(
             vol.Coerce(float), vol.Range(min=0.1, max=10.0)
         ),
+        vol.Optional("timeout"): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
     }
 )
 
@@ -42,10 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Video Normalizer from a config entry."""
     _LOGGER.info("Setting up Video Normalizer integration")
     
-    # Store the download directory from config
+    # Store the download directory and timeout from config
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "download_dir": entry.data.get("download_dir"),
+        "timeout": entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     }
     
     # Initialize video processor
@@ -66,7 +72,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resize_height = call.data.get("resize_height")
         target_aspect_ratio = call.data.get("target_aspect_ratio")
         
-        _LOGGER.info("Processing video: %s", input_file_path)
+        # Get timeout from service call or use configured default
+        timeout = call.data.get("timeout")
+        if timeout is None:
+            # Use the configured timeout from the first config entry
+            for entry_data in hass.data[DOMAIN].values():
+                if isinstance(entry_data, dict) and CONF_TIMEOUT in entry_data:
+                    timeout = entry_data[CONF_TIMEOUT]
+                    break
+            if timeout is None:
+                timeout = DEFAULT_TIMEOUT
+        
+        _LOGGER.info("Processing video: %s (timeout: %d seconds)", input_file_path, timeout)
         
         # Get sensor reference
         sensor = hass.data[DOMAIN].get("sensor")
@@ -108,18 +125,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             output_path = None
             output_name = None
         
-        # Process the video
+        # Process the video with timeout
         try:
-            result = await video_processor.process_video(
-                video_path=input_file_path,
-                output_path=output_path,
-                output_name=output_name,
-                overwrite=overwrite,
-                normalize_aspect=normalize_aspect,
-                generate_thumbnail=generate_thumbnail,
-                resize_width=resize_width,
-                resize_height=resize_height,
-                target_aspect_ratio=target_aspect_ratio,
+            result = await asyncio.wait_for(
+                video_processor.process_video(
+                    video_path=input_file_path,
+                    output_path=output_path,
+                    output_name=output_name,
+                    overwrite=overwrite,
+                    normalize_aspect=normalize_aspect,
+                    generate_thumbnail=generate_thumbnail,
+                    resize_width=resize_width,
+                    resize_height=resize_height,
+                    target_aspect_ratio=target_aspect_ratio,
+                ),
+                timeout=timeout,
             )
             
             # Collect processes performed
@@ -160,6 +180,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Video processing timed out after %d seconds: %s",
+                timeout,
+                input_file_path,
+            )
+            if sensor:
+                sensor.set_idle("failed", processes_performed)
+            hass.bus.async_fire(
+                f"{DOMAIN}_video_processing_failed",
+                {
+                    "video_path": input_file_path,
+                    "error": f"Processing timed out after {timeout} seconds",
+                },
+            )
         except Exception as err:
             _LOGGER.exception("Unexpected error processing video: %s", input_file_path)
             if sensor:
