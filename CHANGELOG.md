@@ -16,9 +16,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Solution: Modified temporary file naming to preserve the original video extension (e.g., `.mp4`) by using `os.path.splitext()` to separate base path from extension
   - Temporary files now follow the pattern: `base.operation.tmp.ext` (e.g., `ring.thumbnail.tmp.mp4` instead of `ring.mp4.thumbnail.tmp`)
   - This allows ffmpeg to correctly detect the output format for all processing operations
-- **Improved cleanup process**: Temporary files are now cleaned up after the sensor state is updated to idle
+
+### Changed
+
+- **Service lifecycle optimization**: Modified the order of operations after video processing completes
+  - New order: process → fire events → update sensor → cleanup (previously: process → update sensor → fire events → cleanup)
+  - Events are now fired before the sensor state is updated to idle, allowing automations to react to events first
+  - This provides better integration with automation workflows and ensures proper event handling
+  - Temporary files are cleaned up after both event firing and sensor updates are complete
+
+### Added
+
+- **Documentation**: Added comprehensive Service Lifecycle section to README
+  - Detailed explanation of the service execution order
+  - Example automations demonstrating how to use events and sensor state changes
+  - Clarification on when events fire versus when sensor state updates
+
+### Improved
+
+- **Temporary file cleanup process**: Enhanced cleanup to occur after sensor state and events
   - Previously, temp files were deleted during video processing before the service completed
-  - Now temp files are cleaned up after the sensor transitions to idle state, ensuring proper service lifecycle
+  - Now temp files are cleaned up after the sensor transitions to idle state and events are fired
   - Added `cleanup_temp_files()` method for explicit cleanup with known file list
   - Added `cleanup_temp_files_by_video_path()` method for cleanup in case of timeout or exception when temp file list is not available
   - Ensures all temporary files are properly removed in all scenarios (success, failure, timeout, exception)
@@ -31,8 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Thumbnail embedding operation: Now creates files like `video.thumbnail.tmp.mp4`
 - All temporary files maintain proper video extension at the end for ffmpeg format detection
 - Modified `process_video()` to return temp file list in results instead of cleaning up immediately
-- Service handler now calls cleanup methods after updating sensor to idle state
+- Service handler now calls cleanup methods after firing events and updating sensor to idle state
 - Added robust error handling for cleanup in timeout and exception scenarios
+- Added explicit comments throughout code documenting the service lifecycle order
 - All code passes ruff linting and mypy type checking
 
 ## [0.5.3] - 2025-12-16
