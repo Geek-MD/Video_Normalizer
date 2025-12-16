@@ -114,6 +114,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": "Video file not found",
                 },
             )
+            # Yield to event loop to ensure event is processed
+            await asyncio.sleep(0)
             # Update sensor state to idle after event
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -176,6 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         f"{DOMAIN}_video_skipped",
                         result,
                     )
+                    # Yield to event loop to ensure event is processed
+                    await asyncio.sleep(0)
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -192,6 +196,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         f"{DOMAIN}_video_processing_success",
                         result,
                     )
+                    # Yield to event loop to ensure event is processed
+                    await asyncio.sleep(0)
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("success", processes_performed)
@@ -209,6 +215,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"{DOMAIN}_video_processing_failed",
                     result,
                 )
+                # Yield to event loop to ensure event is processed
+                await asyncio.sleep(0)
                 # Update sensor state to idle after event, before cleanup
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
@@ -234,6 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": f"Processing timed out after {timeout} seconds",
                 },
             )
+            # Yield to event loop to ensure event is processed
+            await asyncio.sleep(0)
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -256,6 +266,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "error": str(err),
                 },
             )
+            # Yield to event loop to ensure event is processed
+            await asyncio.sleep(0)
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)

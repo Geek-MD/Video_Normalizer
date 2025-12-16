@@ -15,13 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The bug was inconsistent with the rest of the codebase where events are always fired before sensor updates
   - Solution: Swapped the order to fire the event first, then update the sensor state
   - Now follows the correct service lifecycle documented in v0.5.4: process → fire events → update sensor → cleanup
+- **Critical Bug Fix**: Added event loop yield after firing events to ensure proper event processing
+  - Issue: Events were being scheduled but the service could complete before the event loop processed them
+  - This caused a race condition where automations might miss events
+  - Solution: Added `await asyncio.sleep(0)` after each `hass.bus.async_fire()` call
+  - This yields control to the event loop, ensuring events are processed before the service continues
+  - Applied to all six event firing locations for consistency
 
 ### Technical
 
-- Updated event firing order in file validation path (line 109-119 in __init__.py)
+- Updated event firing order in file validation path (line 109-122 in __init__.py)
 - Event now fires before `sensor.set_idle()` is called, consistent with all other code paths
-- Added clarifying comment: "# Fire event before sensor update and cleanup"
+- Added `await asyncio.sleep(0)` after each event firing to yield to the event loop
+- Added clarifying comments throughout: "# Yield to event loop to ensure event is processed"
 - All code maintains consistency with the service lifecycle order
+- Prevents race conditions between event firing and service completion
 
 ## [0.5.4] - 2025-12-16
 
