@@ -35,11 +35,12 @@ async def _ensure_event_processed() -> None:
     This prevents race conditions where the service completes before
     automations can catch the fired events.
     
-    Using a small delay (0.1 seconds) gives the event system enough
+    Using a delay (0.5 seconds) gives the event system ample
     time to dispatch events to all listeners, including automations
-    waiting for these events.
+    waiting for these events. This longer delay ensures reliable
+    event delivery even under system load or with multiple listeners.
     """
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.5)
 
 
 # Service schema
@@ -129,13 +130,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 elapsed_time,
             )
             # Fire event before sensor update and cleanup
-            hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
-                {
-                    "video_path": input_file_path,
-                    "error": "Video file not found",
-                },
-            )
+            event_type = f"{DOMAIN}_video_processing_failed"
+            event_data = {
+                "video_path": input_file_path,
+                "error": "Video file not found",
+            }
+            _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+            hass.bus.async_fire(event_type, event_data)
             await _ensure_event_processed()
             # Update sensor state to idle after event
             if sensor:
@@ -196,12 +197,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                     # Fire event before sensor update and cleanup
                     # Ensure video_path is always in event data
+                    event_type = f"{DOMAIN}_video_skipped"
                     event_data = dict(result)
                     event_data["video_path"] = input_file_path
-                    hass.bus.async_fire(
-                        f"{DOMAIN}_video_skipped",
-                        event_data,
-                    )
+                    _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+                    hass.bus.async_fire(event_type, event_data)
                     await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
@@ -216,12 +216,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                     # Fire event before sensor update and cleanup
                     # Ensure video_path is always in event data
+                    event_type = f"{DOMAIN}_video_processing_success"
                     event_data = dict(result)
                     event_data["video_path"] = input_file_path
-                    hass.bus.async_fire(
-                        f"{DOMAIN}_video_processing_success",
-                        event_data,
-                    )
+                    _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+                    hass.bus.async_fire(event_type, event_data)
                     await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
@@ -237,12 +236,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 # Fire event before sensor update and cleanup
                 # Ensure video_path is always in event data
+                event_type = f"{DOMAIN}_video_processing_failed"
                 event_data = dict(result)
                 event_data["video_path"] = input_file_path
-                hass.bus.async_fire(
-                    f"{DOMAIN}_video_processing_failed",
-                    event_data,
-                )
+                _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+                hass.bus.async_fire(event_type, event_data)
                 await _ensure_event_processed()
                 # Update sensor state to idle after event, before cleanup
                 if sensor:
@@ -272,13 +270,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 elapsed_time,
             )
             # Fire event before sensor update and cleanup
-            hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
-                {
-                    "video_path": input_file_path,
-                    "error": f"Processing timed out after {timeout} seconds",
-                },
-            )
+            event_type = f"{DOMAIN}_video_processing_failed"
+            event_data = {
+                "video_path": input_file_path,
+                "error": f"Processing timed out after {timeout} seconds",
+            }
+            _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+            hass.bus.async_fire(event_type, event_data)
             await _ensure_event_processed()
             # Update sensor state to idle after event, before cleanup
             if sensor:
@@ -296,13 +294,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 elapsed_time,
             )
             # Fire event before sensor update and cleanup
-            hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
-                {
-                    "video_path": input_file_path,
-                    "error": str(err),
-                },
-            )
+            event_type = f"{DOMAIN}_video_processing_failed"
+            event_data = {
+                "video_path": input_file_path,
+                "error": str(err),
+            }
+            _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
+            hass.bus.async_fire(event_type, event_data)
             await _ensure_event_processed()
             # Update sensor state to idle after event, before cleanup
             if sensor:

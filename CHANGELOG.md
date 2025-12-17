@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.9] - 2025-12-17
+
+### Fixed
+
+- **Critical Bug Fix**: Increased event processing delay and added comprehensive event logging
+  - Issue: Events were still not reliably reaching automations despite 0.1s delay in v0.5.8
+  - Even with previous fixes, automations with `wait_for_trigger` were sometimes not receiving events
+  - The 0.1s delay was insufficient for reliable event dispatch under system load or with multiple listeners
+  - Solution: Increased event processing delay from 0.1 to 0.5 seconds (500ms)
+  - This longer delay ensures reliable event delivery even under varying system conditions
+  - Affects all six event firing locations:
+    - `video_normalizer_video_processing_success`
+    - `video_normalizer_video_skipped`
+    - `video_normalizer_video_processing_failed`
+  - Added comprehensive INFO-level logging for all event fires to aid debugging
+  - Each event fire now logs: "Firing event: {event_type} with data: {event_data}"
+  - Helps users and developers confirm events are being dispatched correctly
+
+### Technical
+
+- Modified `_ensure_event_processed()` function to use `await asyncio.sleep(0.5)` instead of `await asyncio.sleep(0.1)`
+- Updated documentation explaining the need for the 500ms delay for reliable event dispatch
+- Added INFO-level logging before every `hass.bus.async_fire()` call
+- All event firing points maintain the same reliable delay and logging
+- Service lifecycle remains: process → fire events → wait 500ms → update sensor → cleanup
+- Backwards compatible with existing automations
+- Logging helps diagnose any remaining event delivery issues
+
 ## [0.5.8] - 2025-12-17
 
 ### Fixed

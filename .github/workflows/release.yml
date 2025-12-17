@@ -35,12 +35,20 @@ jobs:
           VERSION=${{ steps.get_version.outputs.version }}
           
           # Extract the changelog section for this version
-          # This reads from the first occurrence of [VERSION] to the next ## heading
-          # Pattern explanation:
-          #   - /## \[$VERSION\]/  : Start at the heading for this version
-          #   - /^## \[/           : Continue until we hit another version heading
-          #   - sed '1d'           : Remove the first line (the version heading itself)
-          CHANGELOG=$(awk "/## \[$VERSION\]/,/^## \[/ {if (/^## \[/ && !/## \[$VERSION\]/) exit; print}" CHANGELOG.md | sed '1d')
+          # This reads from the version heading to the next version heading
+          # and removes the version heading line but keeps all content
+          CHANGELOG=$(awk -v version="$VERSION" '
+            BEGIN { found=0; content="" }
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" version "\\]") {
+                found=1
+                next
+              }
+            }
+            found { content = content $0 "\n" }
+            END { print content }
+          ' CHANGELOG.md | sed 's/^[[:space:]]*$//' | sed '/./,$!d')
           
           # If changelog is empty, use a default message
           if [ -z "$CHANGELOG" ]; then
@@ -70,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
-          release_name: Release ${{ steps.get_version.outputs.tag }}
+          release_name: ${{ steps.get_version.outputs.tag }}
           body_path: release_notes.md
           draft: false
           prerelease: false
