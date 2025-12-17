@@ -191,9 +191,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         elapsed_time,
                     )
                     # Fire event before sensor update and cleanup
+                    # Ensure video_path is always in event data
+                    event_data = dict(result)
+                    event_data["video_path"] = input_file_path
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_skipped",
-                        result,
+                        event_data,
                     )
                     await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
@@ -208,9 +211,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         elapsed_time,
                     )
                     # Fire event before sensor update and cleanup
+                    # Ensure video_path is always in event data
+                    event_data = dict(result)
+                    event_data["video_path"] = input_file_path
                     hass.bus.async_fire(
                         f"{DOMAIN}_video_processing_success",
-                        result,
+                        event_data,
                     )
                     await _ensure_event_processed()
                     # Update sensor state to idle after event, before cleanup
@@ -226,9 +232,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     elapsed_time,
                 )
                 # Fire event before sensor update and cleanup
+                # Ensure video_path is always in event data
+                event_data = dict(result)
+                event_data["video_path"] = input_file_path
                 hass.bus.async_fire(
                     f"{DOMAIN}_video_processing_failed",
-                    result,
+                    event_data,
                 )
                 await _ensure_event_processed()
                 # Update sensor state to idle after event, before cleanup
