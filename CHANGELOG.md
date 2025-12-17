@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2025-12-17
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed event firing timing issue preventing automations from receiving events
+  - Issue: Events were being fired but automations with `wait_for_trigger` were not receiving them
+  - The service was completing before events were fully dispatched through Home Assistant's event system
+  - Automations showed `completed: false` and `trigger: null` even though the service executed successfully
+  - Previous fix using `await asyncio.sleep(0)` was insufficient for reliable event dispatch
+  - Solution: Increased event processing delay from 0 to 0.1 seconds (100ms)
+  - This gives the event system adequate time to dispatch events to all listeners
+  - Ensures automations waiting for events have time to receive and process them before the service completes
+  - Affects all six event firing locations:
+    - `video_normalizer_video_processing_success`
+    - `video_normalizer_video_skipped`
+    - `video_normalizer_video_processing_failed`
+  - Testing with Home Assistant showed events now properly trigger automations
+
+### Technical
+
+- Modified `_ensure_event_processed()` function to use `await asyncio.sleep(0.1)` instead of `await asyncio.sleep(0)`
+- Added detailed documentation explaining the need for the 100ms delay
+- All event firing points maintain the same reliable delay
+- Service lifecycle remains: process → fire events → wait 100ms → update sensor → cleanup
+- Backwards compatible with existing automations
+
 ## [0.5.7] - 2025-12-17
 
 ### Added
