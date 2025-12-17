@@ -34,8 +34,12 @@ async def _ensure_event_processed() -> None:
     is processed by the event loop before the service continues.
     This prevents race conditions where the service completes before
     automations can catch the fired events.
+    
+    Using a small delay (0.1 seconds) gives the event system enough
+    time to dispatch events to all listeners, including automations
+    waiting for these events.
     """
-    await asyncio.sleep(0)
+    await asyncio.sleep(0.1)
 
 
 # Service schema
