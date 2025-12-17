@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2025-12-17
+
+### Added
+
+- **Event Data Enhancement**: Added `video_path` to event data for improved automation compatibility
+  - All events now include the `video_path` field in their event data
+  - Ensures consistent event data structure across all video processing events
+  - Events affected: `video_normalizer_video_processing_failed`, `video_normalizer_video_skipped`, and other processing events
+  - Makes it easier to create automations that respond to video processing events
+  - The `video_path` field contains the full path to the input video file being processed
+
+### Technical
+
+- Modified event firing to explicitly include `video_path` in event data dictionary
+- Ensures `video_path` is always present in event data, even when it's also part of the result dictionary
+- Added `event_data = dict(result)` followed by `event_data["video_path"] = input_file_path` pattern
+- Improves automation reliability by guaranteeing the presence of this key field
+
 ## [0.5.6] - 2025-12-17
 
 ### Fixed
