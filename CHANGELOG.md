@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.6] - 2025-12-17
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed service completion signal issue
+  - Issue: The `normalize_video` service was not properly signaling completion to Home Assistant
+  - This caused automations and scripts to hang with `completed: false` status
+  - The service would execute successfully but Home Assistant wouldn't recognize it as complete
+  - Solution: Added explicit service response support with `SupportsResponse.OPTIONAL`
+  - Added proper return values from the service handler to signal completion
+  - Service now returns response data when requested with `return_response: true`
+
+### Added
+
+- Service response support for `normalize_video` service
+  - Returns success status, output path, and operations performed
+  - Response includes: `success`, `skipped`, `output_path`, `operations`
+  - Can be used with `response_variable` in automations for advanced workflows
+  - Backwards compatible - works with existing automations without changes
+
+### Technical
+
+- Imported `SupportsResponse` from `homeassistant.helpers.service`
+- Added `typing.Any` import for proper type hints
+- Changed service handler return type from `None` to `dict[str, Any] | None`
+- Updated service registration to include `supports_response=SupportsResponse.OPTIONAL`
+- Added return statements in all service handler exit paths:
+  - File not found: returns error response
+  - Successful processing: returns success response with operation details
+  - Timeout: returns timeout error response
+  - Exception: returns exception error response
+- Maintains backward compatibility with existing automations
+
 ## [0.5.5] - 2025-12-16
 
 ### Fixed

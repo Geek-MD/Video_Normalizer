@@ -5,6 +5,7 @@ import asyncio
 import logging
 import os
 import time
+from typing import Any
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import SupportsResponse
 
 from .const import CONF_TIMEOUT, DEFAULT_TIMEOUT
 from .video_processor import VideoProcessor
@@ -74,8 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
-    async def handle_normalize_video(call: ServiceCall) -> None:
-        """Handle the normalize_video service call."""
+    async def handle_normalize_video(call: ServiceCall) -> dict[str, Any] | None:
+        """Handle the normalize_video service call.
+        
+        Returns:
+            Service response data if call.return_response is True, otherwise None
+        """
         input_file_path = call.data["input_file_path"]
         output_file_path = call.data.get("output_file_path")
         overwrite = call.data.get("overwrite", False)
@@ -130,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Update sensor state to idle after event
             if sensor:
                 sensor.set_idle("failed", processes_performed)
-            return
+            return {"success": False, "error": "Video file not found"} if call.return_response else None
         
         # Parse output_file_path to extract output_path and output_name
         # When overwrite is True, output_file_path is ignored and we use input path
@@ -233,6 +239,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # This ensures proper service lifecycle: process → fire events → update sensor → cleanup
             if temp_files:
                 video_processor.cleanup_temp_files(temp_files)
+            
+            # Return response data if requested
+            if call.return_response:
+                return {
+                    "success": result["success"],
+                    "skipped": result.get("skipped", False),
+                    "output_path": result.get("output_path"),
+                    "operations": result.get("operations", {}),
+                }
+            return None
         except asyncio.TimeoutError:
             elapsed_time = time.time() - start_time
             _LOGGER.error(
@@ -257,6 +273,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Clean up any temp files that may have been created before timeout
             # This happens AFTER event firing and sensor state update
             video_processor.cleanup_temp_files_by_video_path(input_file_path)
+            return {"success": False, "error": f"Processing timed out after {timeout} seconds"} if call.return_response else None
         except Exception as err:
             elapsed_time = time.time() - start_time
             _LOGGER.exception(
@@ -280,6 +297,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Clean up any temp files that may have been created before exception
             # This happens AFTER event firing and sensor state update
             video_processor.cleanup_temp_files_by_video_path(input_file_path)
+            return {"success": False, "error": str(err)} if call.return_response else None
     
     # Register the service
     hass.services.async_register(
@@ -287,6 +305,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_NORMALIZE_VIDEO,
         handle_normalize_video,
         schema=SERVICE_NORMALIZE_VIDEO_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     
     _LOGGER.info("Video Normalizer service registered successfully")
