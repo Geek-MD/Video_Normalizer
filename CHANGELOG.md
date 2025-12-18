@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-12-18
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed video processing hang issue that left sensor permanently in "working" state
+  - Issue: The service would start processing (resizing, normalizing aspect ratio, embedding thumbnails) but would not complete, leaving the sensor stuck in "working" state indefinitely
+  - Root cause: Individual ffmpeg subprocess operations (`process.communicate()`) had no timeout protection
+  - While the service had a global timeout at the top level, individual ffmpeg operations could hang indefinitely waiting for subprocess completion
+  - When ffmpeg hung on operations like resize, normalize_aspect_ratio, generate_thumbnail, or embed_thumbnail, the subprocess would not respond and the sensor would never return to "idle"
+  - Solution: Added timeout protection to all subprocess `communicate()` calls using `asyncio.wait_for()`
+  - Added per-operation timeouts: 30 seconds for ffprobe operations, 300 seconds for ffmpeg video processing operations
+  - All timeout errors are now properly logged and handled, allowing the sensor to return to "idle" state with "failed" status
+  - Ensures robust processing even when ffmpeg encounters corrupted files or system resource issues
+
+### Changed
+
+- Added two new class constants to `VideoProcessor`:
+  - `PROBE_TIMEOUT = 30`: Timeout for ffprobe operations (getting video info, checking thumbnails)
+  - `FFMPEG_OPERATION_TIMEOUT = 300`: Timeout for individual ffmpeg operations (resize, normalize, generate/embed thumbnails)
+- Enhanced error handling for all subprocess operations to catch and log `asyncio.TimeoutError`
+- All timeout errors now properly clean up temporary files and return appropriate error status
+
+### Technical
+
+- Wrapped all 7 `process.communicate()` calls with `asyncio.wait_for()`:
+  - `_get_dimensions_with_ffprobe()`: ffprobe JSON output (30s timeout)
+  - `_get_dimensions_with_ffmpeg()`: ffmpeg -i fallback (30s timeout)
+  - `check_video_has_thumbnail()`: ffprobe thumbnail check (30s timeout)
+  - `generate_thumbnail()`: ffmpeg thumbnail generation (300s timeout)
+  - `embed_thumbnail()`: ffmpeg thumbnail embedding (300s timeout)
+  - `normalize_aspect_ratio()`: ffmpeg aspect ratio normalization (300s timeout)
+  - `resize_video()`: ffmpeg video resizing (300s timeout)
+- Added `asyncio.TimeoutError` exception handlers to all methods with subprocess calls
+- Timeout errors are logged at ERROR or DEBUG level depending on operation criticality
+- All code passes ruff linting and mypy type checking
+- Maintains backward compatibility with existing configurations and automations
+
 ## [0.6.0] - 2025-12-17
 
 ### Fixed

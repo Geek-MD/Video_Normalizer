@@ -17,6 +17,13 @@ class VideoProcessor:
     
     # Tolerance for aspect ratio comparison
     ASPECT_RATIO_TOLERANCE = 0.01
+    
+    # Timeout for ffprobe operations (seconds)
+    PROBE_TIMEOUT = 30
+    
+    # Timeout for individual ffmpeg operations (seconds)
+    # This should be per-operation timeout, not total processing timeout
+    FFMPEG_OPERATION_TIMEOUT = 300
 
     def __init__(self, ffmpeg_path: str = "ffmpeg", ffprobe_path: str = "ffprobe"):
         """Initialize the video processor.
@@ -149,7 +156,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.PROBE_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.debug(
@@ -180,6 +190,9 @@ class VideoProcessor:
                 "duration": video_stream.get("duration"),
             }
 
+        except asyncio.TimeoutError:
+            _LOGGER.debug("ffprobe timed out after %d seconds", self.PROBE_TIMEOUT)
+            return None
         except (json.JSONDecodeError, KeyError, TypeError) as err:
             _LOGGER.debug("Failed to parse ffprobe output: %s", err)
             return None
@@ -203,7 +216,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.PROBE_TIMEOUT
+            )
 
             # ffmpeg -i outputs to stderr
             output = stderr.decode()
@@ -226,6 +242,9 @@ class VideoProcessor:
                 "aspect_ratio": aspect_ratio,
             }
 
+        except asyncio.TimeoutError:
+            _LOGGER.debug("ffmpeg -i timed out after %d seconds", self.PROBE_TIMEOUT)
+            return None
         except (ValueError, AttributeError) as err:
             _LOGGER.debug("Failed to parse ffmpeg output: %s", err)
             return None
@@ -253,7 +272,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.PROBE_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.debug(
@@ -273,6 +295,9 @@ class VideoProcessor:
             
             return False
 
+        except asyncio.TimeoutError:
+            _LOGGER.debug("ffprobe timed out checking for thumbnail after %d seconds", self.PROBE_TIMEOUT)
+            return False
         except (json.JSONDecodeError, KeyError, TypeError) as err:
             _LOGGER.debug("Failed to check for thumbnail: %s", err)
             return False
@@ -415,7 +440,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.FFMPEG_OPERATION_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.error(
@@ -429,6 +457,9 @@ class VideoProcessor:
             
             return False
 
+        except asyncio.TimeoutError:
+            _LOGGER.error("Thumbnail generation timed out after %d seconds", self.FFMPEG_OPERATION_TIMEOUT)
+            return False
         except Exception as err:
             _LOGGER.error("Error generating thumbnail: %s", err)
             return False
@@ -464,7 +495,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.FFMPEG_OPERATION_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.error(
@@ -478,6 +512,15 @@ class VideoProcessor:
             _LOGGER.info("Thumbnail embedded successfully")
             return True
 
+        except asyncio.TimeoutError:
+            _LOGGER.error("Embedding thumbnail timed out after %d seconds", self.FFMPEG_OPERATION_TIMEOUT)
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
+                try:
+                    os.remove(output_video_path)
+                except Exception:
+                    pass
+            return False
         except Exception as err:
             _LOGGER.error("Error embedding thumbnail: %s", err)
             # Clean up output file if it exists
@@ -567,7 +610,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.FFMPEG_OPERATION_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.error(
@@ -581,6 +627,15 @@ class VideoProcessor:
             _LOGGER.info("Aspect ratio normalized successfully")
             return True
 
+        except asyncio.TimeoutError:
+            _LOGGER.error("Aspect ratio normalization timed out after %d seconds", self.FFMPEG_OPERATION_TIMEOUT)
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
+                try:
+                    os.remove(output_video_path)
+                except Exception:
+                    pass
+            return False
         except Exception as err:
             _LOGGER.error("Error normalizing aspect ratio: %s", err)
             # Clean up output file if it exists
@@ -669,7 +724,10 @@ class VideoProcessor:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.FFMPEG_OPERATION_TIMEOUT
+            )
 
             if process.returncode != 0:
                 _LOGGER.error(
@@ -683,6 +741,15 @@ class VideoProcessor:
             _LOGGER.info("Video resized successfully")
             return True
 
+        except asyncio.TimeoutError:
+            _LOGGER.error("Video resizing timed out after %d seconds", self.FFMPEG_OPERATION_TIMEOUT)
+            # Clean up output file if it exists
+            if os.path.exists(output_video_path):
+                try:
+                    os.remove(output_video_path)
+                except Exception:
+                    pass
+            return False
         except Exception as err:
             _LOGGER.error("Error resizing video: %s", err)
             # Clean up output file if it exists
