@@ -27,20 +27,23 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 SERVICE_NORMALIZE_VIDEO = "normalize_video"
 
 
-async def _ensure_event_processed() -> None:
-    """Yield to event loop to ensure events are processed.
+async def _ensure_event_processed(hass: HomeAssistant) -> None:
+    """Ensure events are fully processed before continuing.
     
     This is called after hass.bus.async_fire() to ensure the event
-    is processed by the event loop before the service continues.
+    is dispatched to all listeners before the service continues.
     This prevents race conditions where the service completes before
     automations can catch the fired events.
     
-    Using a delay (0.5 seconds) gives the event system ample
-    time to dispatch events to all listeners, including automations
-    waiting for these events. This longer delay ensures reliable
-    event delivery even under system load or with multiple listeners.
+    Uses hass.async_block_till_done() which is the proper Home Assistant
+    pattern for waiting until all pending tasks (including event dispatching)
+    are completed. This is more reliable than sleep() as it actually waits
+    for the work to be done rather than hoping a fixed delay is sufficient.
+    
+    Args:
+        hass: Home Assistant instance
     """
-    await asyncio.sleep(0.5)
+    await hass.async_block_till_done()
 
 
 # Service schema
@@ -137,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
             _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
             hass.bus.async_fire(event_type, event_data)
-            await _ensure_event_processed()
+            await _ensure_event_processed(hass)
             # Update sensor state to idle after event
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -202,7 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     event_data["video_path"] = input_file_path
                     _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
                     hass.bus.async_fire(event_type, event_data)
-                    await _ensure_event_processed()
+                    await _ensure_event_processed(hass)
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("skipped", processes_performed)
@@ -221,7 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     event_data["video_path"] = input_file_path
                     _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
                     hass.bus.async_fire(event_type, event_data)
-                    await _ensure_event_processed()
+                    await _ensure_event_processed(hass)
                     # Update sensor state to idle after event, before cleanup
                     if sensor:
                         sensor.set_idle("success", processes_performed)
@@ -241,7 +244,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 event_data["video_path"] = input_file_path
                 _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
                 hass.bus.async_fire(event_type, event_data)
-                await _ensure_event_processed()
+                await _ensure_event_processed(hass)
                 # Update sensor state to idle after event, before cleanup
                 if sensor:
                     sensor.set_idle("failed", processes_performed)
@@ -277,7 +280,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
             _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
             hass.bus.async_fire(event_type, event_data)
-            await _ensure_event_processed()
+            await _ensure_event_processed(hass)
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)
@@ -301,7 +304,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
             _LOGGER.info("Firing event: %s with data: %s", event_type, event_data)
             hass.bus.async_fire(event_type, event_data)
-            await _ensure_event_processed()
+            await _ensure_event_processed(hass)
             # Update sensor state to idle after event, before cleanup
             if sensor:
                 sensor.set_idle("failed", processes_performed)

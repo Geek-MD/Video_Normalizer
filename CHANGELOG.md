@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-12-17
+
+### Fixed
+
+- **Critical Bug Fix**: Fixed event delivery to automations using proper Home Assistant event loop pattern
+  - Issue: Events (`video_normalizer_video_processing_success`, `video_normalizer_video_skipped`, `video_normalizer_video_processing_failed`) were not being received by automations despite previous delay-based fixes (v0.5.8: 100ms, v0.5.9: 500ms)
+  - Root cause: Using `asyncio.sleep()` does not guarantee that events are fully dispatched to all listeners
+  - The previous approach scheduled events on the event loop but returned before listeners could process them
+  - Automations with `wait_for_trigger` were unable to catch events, showing `completed: false` and `trigger: null`
+  - Users had to disable event-based triggers and use fixed delays (15-20 seconds) as workarounds
+  - Solution: Replaced `await asyncio.sleep(0.5)` with `await hass.async_block_till_done()`
+  - `hass.async_block_till_done()` is the proper Home Assistant pattern for ensuring all pending event loop tasks complete
+  - This method blocks until all scheduled tasks (including event dispatching to listeners) are fully processed
+  - Much more reliable than arbitrary sleep delays as it waits for actual work completion
+  - Events are now guaranteed to be dispatched and received by all listeners before service returns
+  - Tested with video normalization completing in ~10 seconds; events are now reliably received
+
+### Technical
+
+- Modified `_ensure_event_processed()` function to accept `hass` parameter and use `await hass.async_block_till_done()`
+- Updated all 6 event firing locations to pass `hass` to `_ensure_event_processed()`
+- Removed arbitrary sleep-based delays in favor of proper event loop synchronization
+- Service lifecycle remains: process → fire events → wait for event loop completion → update sensor → cleanup
+- This is the standard Home Assistant pattern for reliable event delivery from services
+- Backwards compatible with existing automations
+
 ## [0.5.9] - 2025-12-17
 
 ### Fixed
