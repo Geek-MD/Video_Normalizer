@@ -2,5 +2,7 @@
   "name": "Video Normalizer",
   "content_in_root": false,
   "render_readme": true,
+  "zip_release": true,
+  "filename": "video_normalizer.zip",
   "homeassistant": "2023.1.0"
 }

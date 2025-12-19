@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.8] - 2025-12-19
+
+### Changed
+
+- **HACS Publication Preparation**: Enhanced HACS configuration for official publication
+  - Added `zip_release: true` to hacs.json to enable proper release asset handling
+  - Added `filename` field to hacs.json specifying release asset naming convention
+  - Ensures HACS downloads releases as ZIP files from GitHub release assets
+  - Improves installation reliability and consistency for HACS users
+  - Repository now fully compliant with HACS default repository requirements
+
+### Technical
+
+- Updated hacs.json with `zip_release` and `filename` fields for optimal HACS compatibility
+- Version bumped from 0.5.7 to 0.5.8 following semantic versioning
+- All HACS publication requirements verified and met:
+  - Repository structure: ✓ custom_components/video_normalizer/
+  - Required files: ✓ hacs.json, manifest.json, README.md
+  - Manifest fields: ✓ domain, name, version, documentation, issue_tracker, codeowners
+  - HACS configuration: ✓ name, content_in_root, render_readme, zip_release, homeassistant
+- Ready for submission to HACS default repository
+
 ## [0.5.7] - 2025-12-17
 
 ### Added
