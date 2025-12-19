@@ -150,17 +150,15 @@ automation:
 
 ## Events
 
-The service fires events that can be used in automations:
-- `video_normalizer_video_processing_success`: Fired when video processing completes successfully
-- `video_normalizer_video_skipped`: Fired when video processing is skipped because the video already meets all requirements (no changes needed)
-- `video_normalizer_video_processing_failed`: Fired when video processing fails
+The service fires a single event that can be used in automations:
+- `video_normalizer_video_processing_finished`: Fired when video processing completes, regardless of the result. The result is available in the event data under the `result` field, which can be `success`, `skipped`, or `failed`. Additional information about the processing is available in the sensor state attributes.
 
 ## Service Lifecycle
 
 When the `video_normalizer.normalize_video` service is called, it follows a specific lifecycle to ensure proper operation and state management:
 
 1. **Process Video**: The video is processed according to the specified parameters (resize, normalize aspect ratio, generate thumbnail, etc.)
-2. **Fire Events**: Home Assistant events are fired to notify automations of the processing result (`video_processing_success`, `video_skipped`, or `video_processing_failed`)
+2. **Fire Event**: A Home Assistant event (`video_normalizer_video_processing_finished`) is fired to notify automations of the processing completion. The event includes a `result` field with the value `success`, `skipped`, or `failed`
 3. **Update Sensor**: The status sensor is updated to `idle` state with the appropriate result (`success`, `skipped`, or `failed`)
 4. **Cleanup**: Temporary files created during processing are removed
 
@@ -176,13 +174,29 @@ automation:
   - alias: "Process video and send notification"
     trigger:
       - platform: event
-        event_type: video_normalizer_video_processing_success
+        event_type: video_normalizer_video_processing_finished
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.result == 'success' }}"
     action:
       # This action runs immediately after processing, before sensor updates
       - service: notify.mobile_app
         data:
           title: "Video Ready"
           message: "Processing complete for {{ trigger.event.data.video_path }}"
+  
+  - alias: "Handle video processing failures"
+    trigger:
+      - platform: event
+        event_type: video_normalizer_video_processing_finished
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.result == 'failed' }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Video Processing Failed"
+          message: "Error: {{ trigger.event.data.error }}"
       
   - alias: "Monitor sensor state change"
     trigger:

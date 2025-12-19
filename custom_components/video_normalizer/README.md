@@ -77,12 +77,17 @@ All operations use temporary files and atomic replacements to prevent data loss.
 
 ### Events
 
-The integration fires automation-friendly events:
+The integration fires a single automation-friendly event:
 
-**video_normalizer_video_processing_success:**
+**video_normalizer_video_processing_finished:**
+
+This event is fired regardless of the processing result. The `result` field indicates the outcome.
+
+**Success example:**
 ```yaml
 event_data:
   video_path: "/path/to/video.mp4"
+  result: "success"
   success: true
   operations:
     resize: true
@@ -99,10 +104,21 @@ event_data:
     aspect_ratio: 1.777
 ```
 
-**video_normalizer_video_processing_failed:**
+**Skipped example:**
 ```yaml
 event_data:
   video_path: "/path/to/video.mp4"
+  result: "skipped"
+  success: true
+  skipped: true
+  reason: "Video already meets all requirements"
+```
+
+**Failed example:**
+```yaml
+event_data:
+  video_path: "/path/to/video.mp4"
+  result: "failed"
   success: false
   error: "Error message"
 ```
@@ -135,7 +151,7 @@ The video processor implements robust error handling:
 - Failed operations clean up temporary files
 - Detailed logging for debugging
 - Operations continue even if individual steps fail
-- Events are fired for both success and failure
+- A single event is fired for all outcomes (success, skipped, or failed) with result details
 
 ## Development
 
