@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-12-19
+
+### Changed
+
+- **BREAKING: Event Consolidation**: Replaced three separate events with a single unified event
+  - Removed events: `video_normalizer_video_processing_success`, `video_normalizer_video_skipped`, `video_normalizer_video_processing_failed`
+  - New event: `video_normalizer_video_processing_finished`
+  - The new event fires regardless of the processing result
+  - Result information is available in the event data under the `result` field (`success`, `skipped`, or `failed`)
+  - This change simplifies automation logic and makes the event structure more consistent
+  - The result is also available in the sensor state attributes (`sensor.video_normalizer_status`)
+
+### Migration Guide
+
+If you have automations using the old events, update them as follows:
+
+**Before:**
+```yaml
+trigger:
+  - platform: event
+    event_type: video_normalizer_video_processing_success
+```
+
+**After:**
+```yaml
+trigger:
+  - platform: event
+    event_type: video_normalizer_video_processing_finished
+condition:
+  - condition: template
+    value_template: "{{ trigger.event.data.result == 'success' }}"
+```
+
+### Technical
+
+- Modified all event firing calls in `__init__.py` to use `video_normalizer_video_processing_finished`
+- Added `result` field to all event data payloads with values: `success`, `skipped`, or `failed`
+- Updated documentation to reflect the new event structure
+- Updated automation examples to show how to use the new unified event
+- Version bumped from 0.5.8 to 0.6.0 following semantic versioning (breaking change)
+
 ## [0.5.8] - 2025-12-19
 
 ### Changed

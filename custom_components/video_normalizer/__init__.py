@@ -124,11 +124,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
-            # Fire event before sensor update and cleanup
+            # Fire unified event before sensor update and cleanup
             hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
+                f"{DOMAIN}_video_processing_finished",
                 {
                     "video_path": input_file_path,
+                    "result": "failed",
                     "error": "Video file not found",
                 },
             )
@@ -190,12 +191,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         input_file_path,
                         elapsed_time,
                     )
-                    # Fire event before sensor update and cleanup
+                    # Fire unified event before sensor update and cleanup
                     # Ensure video_path is always in event data
                     event_data = dict(result)
                     event_data["video_path"] = input_file_path
+                    event_data["result"] = "skipped"
                     hass.bus.async_fire(
-                        f"{DOMAIN}_video_skipped",
+                        f"{DOMAIN}_video_processing_finished",
                         event_data,
                     )
                     await _ensure_event_processed()
@@ -210,12 +212,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         input_file_path,
                         elapsed_time,
                     )
-                    # Fire event before sensor update and cleanup
+                    # Fire unified event before sensor update and cleanup
                     # Ensure video_path is always in event data
                     event_data = dict(result)
                     event_data["video_path"] = input_file_path
+                    event_data["result"] = "success"
                     hass.bus.async_fire(
-                        f"{DOMAIN}_video_processing_success",
+                        f"{DOMAIN}_video_processing_finished",
                         event_data,
                     )
                     await _ensure_event_processed()
@@ -231,12 +234,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     result.get("error", "Unknown error"),
                     elapsed_time,
                 )
-                # Fire event before sensor update and cleanup
+                # Fire unified event before sensor update and cleanup
                 # Ensure video_path is always in event data
                 event_data = dict(result)
                 event_data["video_path"] = input_file_path
+                event_data["result"] = "failed"
                 hass.bus.async_fire(
-                    f"{DOMAIN}_video_processing_failed",
+                    f"{DOMAIN}_video_processing_finished",
                     event_data,
                 )
                 await _ensure_event_processed()
@@ -267,11 +271,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
-            # Fire event before sensor update and cleanup
+            # Fire unified event before sensor update and cleanup
             hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
+                f"{DOMAIN}_video_processing_finished",
                 {
                     "video_path": input_file_path,
+                    "result": "failed",
                     "error": f"Processing timed out after {timeout} seconds",
                 },
             )
@@ -291,11 +296,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 input_file_path,
                 elapsed_time,
             )
-            # Fire event before sensor update and cleanup
+            # Fire unified event before sensor update and cleanup
             hass.bus.async_fire(
-                f"{DOMAIN}_video_processing_failed",
+                f"{DOMAIN}_video_processing_finished",
                 {
                     "video_path": input_file_path,
+                    "result": "failed",
                     "error": str(err),
                 },
             )
