@@ -8,7 +8,7 @@
       },
       "configure": {
         "title": "Configuración - Video Normalizer",
-        "description": "Configura el directorio de descargas donde se encuentran los videos a procesar.\n\nSi tienes Downloader instalado, este campo se pre-llenará automáticamente con el directorio configurado en Downloader.\n\nPara más información sobre Downloader, visita: {downloader_url}",
+        "description": "Configura el directorio de descargas donde se encuentran los videos a procesar.\n\nEl directorio ha sido detectado automáticamente desde la configuración de tu integración Downloader.",
         "data": {
           "download_dir": "Directorio de Descargas",
           "timeout": "Tiempo de Espera del Procesamiento (segundos)"
@@ -20,7 +20,8 @@
       "unknown": "Error inesperado. Por favor, verifica los logs para más información."
     },
     "abort": {
-      "already_configured": "Video Normalizer ya está configurado"
+      "already_configured": "Video Normalizer ya está configurado",
+      "downloader_required": "La integración Downloader es requerida pero no está instalada. Por favor, instálala primero desde: {downloader_url}"
     }
   },
   "entity": {

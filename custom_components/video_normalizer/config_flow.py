@@ -72,28 +72,32 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1
+    
+    # Only allow a single config entry
+    # This ensures only one instance of Video Normalizer can be configured
+    # as the service and sensor are global to the integration
+    SINGLE_CONFIG_ENTRY = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step - show recommendation for Downloader."""
-        if user_input is not None:
-            # User clicked continue, proceed to configuration
-            return await self.async_step_configure()
-
-        # Try to detect if Downloader is already installed
+        """Handle the initial step - verify Downloader is installed."""
+        # Check if Downloader is installed (required dependency)
         downloader_info = await detect_downloader_integration(self.hass)
-        has_downloader = downloader_info is not None
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({}),
-            errors={},
-            description_placeholders={
-                "downloader_url": "https://www.home-assistant.io/integrations/downloader/",
-                "has_downloader": "✓" if has_downloader else "✗",
-            },
-        )
+        
+        if downloader_info is None:
+            # Downloader is not installed - abort configuration
+            _LOGGER.error("Downloader integration is required but not installed")
+            return self.async_abort(
+                reason="downloader_required",
+                description_placeholders={
+                    "downloader_url": "https://www.home-assistant.io/integrations/downloader/",
+                },
+            )
+        
+        # Downloader is installed, proceed to configuration
+        _LOGGER.info("Downloader integration detected, proceeding with configuration")
+        return await self.async_step_configure()
     
     async def async_step_configure(
         self, user_input: dict[str, Any] | None = None
@@ -117,11 +121,13 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
                     },
                 )
 
-        # Try to detect Downloader configuration to pre-fill the field
+        # Get Downloader configuration to pre-fill the field
+        # We know Downloader is installed because async_step_user verified it
         downloader_info = await detect_downloader_integration(self.hass)
         default_download_dir = ""
         if downloader_info:
             default_download_dir = downloader_info.get("download_dir", "")
+            _LOGGER.info("Pre-filling download directory from Downloader: %s", default_download_dir)
 
         return self.async_show_form(
             step_id="configure",
@@ -134,7 +140,4 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "downloader_url": "https://www.home-assistant.io/integrations/downloader/"
-            },
         )
