@@ -8,6 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import DOMAIN
 
@@ -26,7 +27,7 @@ async def async_setup_entry(
     """Set up the Video Normalizer sensor."""
     _LOGGER.info("Setting up Video Normalizer sensor")
     
-    sensor = VideoNormalizerSensor()
+    sensor = VideoNormalizerSensor(entry)
     async_add_entities([sensor], True)
     
     # Store sensor reference for service to update
@@ -39,7 +40,7 @@ class VideoNormalizerSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_name = "Status"
 
-    def __init__(self) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
         self._attr_unique_id = f"{DOMAIN}_status"
         self._attr_native_value = STATE_IDLE
@@ -48,6 +49,15 @@ class VideoNormalizerSensor(SensorEntity):
             "timestamp": None,
             "processes": [],
         }
+        
+        # Add device info for proper organization in HA
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name="Video Normalizer",
+            manufacturer="Geek-MD",
+            model="Video Processor",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def icon(self) -> str:

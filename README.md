@@ -51,6 +51,8 @@ This integration works independently but is recommended to be used with the [Dow
 
 ## Configuration
 
+**Note:** Video Normalizer can only be configured once per Home Assistant instance. This ensures proper service and sensor management.
+
 During setup, you'll need to configure:
 - **Download directory**: Where videos to be processed are located. If the Downloader integration is installed, this field will be automatically pre-filled with its configured directory.
 - **Processing timeout** (optional, default: 300 seconds / 5 minutes): Maximum time to wait for video processing to complete. Optimized for Home Assistant Green hardware specifications (Rockchip RK3566, 4 GB RAM). Increase this value if you frequently process longer or higher-resolution videos.

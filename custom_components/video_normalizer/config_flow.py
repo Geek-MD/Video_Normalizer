@@ -72,6 +72,11 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
     """Handle a config flow for Video Normalizer."""
 
     VERSION = 1
+    
+    # Only allow a single config entry
+    # This ensures only one instance of Video Normalizer can be configured
+    # as the service and sensor are global to the integration
+    SINGLE_CONFIG_ENTRY = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
