@@ -18,43 +18,57 @@ Home Assistant custom integration that normalizes aspect ratio of videos and pro
 
 ## Requirements
 
-This integration works independently but is recommended to be used with the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration for automatic video downloads. If Downloader is installed, Video Normalizer will auto-detect and use its download directory configuration.
+This integration **requires** the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured first. Video Normalizer uses Downloader's configuration to automatically detect the download directory where videos are processed.
 
 ## Installation
 
 ### HACS (Recommended)
 
-1. Open HACS in your Home Assistant instance
-2. Click on "Integrations"
-3. Click the three dots in the top right corner and select "Custom repositories"
-4. Add the repository URL: `https://github.com/Geek-MD/Video_Normalizer`
-5. Select "Integration" as the category
-6. Click "Add"
-7. Search for "Video Normalizer" in HACS
-8. Click "Download"
-9. Restart Home Assistant
-10. Go to Settings > Devices & Services
-11. Click the + button to add a new integration
-12. Search for "Video Normalizer"
-13. Follow the configuration steps
+1. **Install Downloader first** (required dependency):
+   - Go to Settings > Devices & Services
+   - Click "+ Add Integration"
+   - Search for "Downloader" and install it
+   - Configure the download directory
+
+2. Open HACS in your Home Assistant instance
+3. Click on "Integrations"
+4. Click the three dots in the top right corner and select "Custom repositories"
+5. Add the repository URL: `https://github.com/Geek-MD/Video_Normalizer`
+6. Select "Integration" as the category
+7. Click "Add"
+8. Search for "Video Normalizer" in HACS
+9. Click "Download"
+10. Restart Home Assistant
+11. Go to Settings > Devices & Services
+12. Click the + button to add a new integration
+13. Search for "Video Normalizer"
+14. Follow the configuration steps
 
 ### Manual Installation
 
-1. Copy the `custom_components/video_normalizer` directory to your Home Assistant `custom_components` directory
-2. Restart Home Assistant
-3. Go to Settings > Devices & Services
-4. Click the + button to add a new integration
-5. Search for "Video Normalizer"
-6. Follow the configuration steps
+1. **Install Downloader first** (required dependency):
+   - Go to Settings > Devices & Services
+   - Click "+ Add Integration"
+   - Search for "Downloader" and install it
+   - Configure the download directory
 
-**Note:** The setup wizard will recommend installing the Downloader integration if it's not already installed, but it's not required. If Downloader is installed, its configuration will be automatically detected.
+2. Copy the `custom_components/video_normalizer` directory to your Home Assistant `custom_components` directory
+3. Restart Home Assistant
+4. Go to Settings > Devices & Services
+5. Click the + button to add a new integration
+6. Search for "Video Normalizer"
+7. Follow the configuration steps
+
+**Note:** The setup wizard will automatically detect and use the download directory configured in your Downloader integration.
 
 ## Configuration
 
 **Note:** Video Normalizer can only be configured once per Home Assistant instance. This ensures proper service and sensor management.
 
+**Prerequisite:** The Downloader integration must be installed and configured before setting up Video Normalizer.
+
 During setup, you'll need to configure:
-- **Download directory**: Where videos to be processed are located. If the Downloader integration is installed, this field will be automatically pre-filled with its configured directory.
+- **Download directory**: Where videos to be processed are located. This field will be automatically pre-filled from your Downloader integration configuration.
 - **Processing timeout** (optional, default: 300 seconds / 5 minutes): Maximum time to wait for video processing to complete. Optimized for Home Assistant Green hardware specifications (Rockchip RK3566, 4 GB RAM). Increase this value if you frequently process longer or higher-resolution videos.
 
 ## Features

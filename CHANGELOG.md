@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved organization in Home Assistant's device registry
   - Better integration with Home Assistant's device management features
 
+- **Downloader Integration Required**: Downloader is now a mandatory dependency
+  - Added `"downloader"` to the dependencies list in manifest.json
+  - Config flow now verifies Downloader is installed before allowing configuration
+  - Setup will abort with clear message if Downloader is not installed
+  - Simplifies configuration by automatically detecting download directory
+  - Ensures consistent behavior across all installations
+
 ### Changed
 
 - **Code Quality Improvements**: Enhanced code following Home Assistant best practices
@@ -34,21 +41,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Device information includes manufacturer, model, and service entry type
   - Better alignment with Home Assistant's entity organization patterns
 
+- **Simplified Configuration Flow**: Config flow is now more streamlined
+  - Removed recommendation step (Downloader is now required)
+  - Directly verifies Downloader installation on configuration start
+  - Auto-fills download directory from Downloader configuration
+  - Clearer error messages when requirements are not met
+
 ### Technical
 
 - Version bumped from 0.6.0 to 1.0.0 (stable release)
 - Enhanced config flow with single-instance enforcement
 - Added DeviceInfo with proper identifiers and metadata
 - Updated sensor to accept ConfigEntry parameter
+- Added dependency verification at config flow start
+- Added new abort reason: `downloader_required`
+- Updated translations (EN/ES) with new abort message
 - All validation checks passing (ruff, mypy, hassfest)
 - Code reviewed for Home Assistant integration best practices
 - Ready for production deployment
 
 ### Migration Notes
 
-- Existing configurations will continue to work without changes
+- **IMPORTANT**: Downloader integration is now required
+  - If you don't have Downloader installed, install it before upgrading
+  - Existing configurations will continue to work if Downloader is present
 - If you have multiple instances configured (not recommended), only one will be active
-- No action needed for users with a single instance configuration
+- No action needed for users with Downloader already installed
 - The sensor entity ID and unique_id remain unchanged
 
 ## [0.6.0] - 2025-12-19

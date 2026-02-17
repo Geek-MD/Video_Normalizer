@@ -3,7 +3,7 @@
   "name": "Video Normalizer",
   "codeowners": ["@Geek-MD"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["downloader"],
   "documentation": "https://github.com/Geek-MD/Video_Normalizer",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Geek-MD/Video_Normalizer/issues",
