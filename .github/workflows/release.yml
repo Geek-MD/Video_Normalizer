@@ -63,8 +63,18 @@ jobs:
             echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
           fi
       
+      - name: Create zip file
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          cd custom_components
+          zip -r ../video_normalizer.zip video_normalizer
+          cd ..
+          echo "Created video_normalizer.zip"
+          ls -lh video_normalizer.zip
+      
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -74,3 +84,14 @@ jobs:
           body_path: release_notes.md
           draft: false
           prerelease: false
+      
+      - name: Upload Release Asset
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./video_normalizer.zip
+          asset_name: video_normalizer.zip
+          asset_content_type: application/zip
