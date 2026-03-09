@@ -251,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Clean up temporary files AFTER event firing and sensor state update
             # This ensures proper service lifecycle: process → fire events → update sensor → cleanup
             if temp_files:
-                video_processor.cleanup_temp_files(temp_files)
+                await video_processor.cleanup_temp_files(temp_files)
             
             # Return response data if requested
             if call.return_response:
@@ -286,7 +286,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 sensor.set_idle("failed", processes_performed)
             # Clean up any temp files that may have been created before timeout
             # This happens AFTER event firing and sensor state update
-            video_processor.cleanup_temp_files_by_video_path(input_file_path)
+            await video_processor.cleanup_temp_files_by_video_path(input_file_path)
             return {"success": False, "error": f"Processing timed out after {timeout} seconds"} if call.return_response else None
         except Exception as err:
             elapsed_time = time.time() - start_time
@@ -311,7 +311,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 sensor.set_idle("failed", processes_performed)
             # Clean up any temp files that may have been created before exception
             # This happens AFTER event firing and sensor state update
-            video_processor.cleanup_temp_files_by_video_path(input_file_path)
+            await video_processor.cleanup_temp_files_by_video_path(input_file_path)
             return {"success": False, "error": str(err)} if call.return_response else None
     
     # Register the service

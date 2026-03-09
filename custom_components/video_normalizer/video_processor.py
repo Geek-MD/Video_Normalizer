@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 import logging
 import os
@@ -28,7 +29,7 @@ class VideoProcessor:
         self.ffmpeg_path = ffmpeg_path
         self.ffprobe_path = ffprobe_path
 
-    def cleanup_temp_files(self, temp_files: list[str]) -> None:
+    async def cleanup_temp_files(self, temp_files: list[str]) -> None:
         """Clean up temporary files after processing is complete.
         
         This should be called after the sensor state has been updated to idle,
@@ -42,15 +43,16 @@ class VideoProcessor:
             
         _LOGGER.debug("Cleaning up %d temporary file(s)", len(temp_files))
         
+        loop = asyncio.get_running_loop()
         for temp_file in temp_files:
             try:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+                if await loop.run_in_executor(None, os.path.exists, temp_file):
+                    await loop.run_in_executor(None, os.remove, temp_file)
                     _LOGGER.debug("Removed temporary file: %s", temp_file)
             except Exception as err:
                 _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
 
-    def cleanup_temp_files_by_video_path(self, video_path: str) -> None:
+    async def cleanup_temp_files_by_video_path(self, video_path: str) -> None:
         """Clean up temporary files based on the original video path.
         
         This is used when processing fails or times out and we don't have
@@ -73,10 +75,11 @@ class VideoProcessor:
         
         _LOGGER.debug("Attempting cleanup of potential temp files for: %s", video_path)
         
+        loop = asyncio.get_running_loop()
         for temp_file in possible_temp_files:
             try:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+                if await loop.run_in_executor(None, os.path.exists, temp_file):
+                    await loop.run_in_executor(None, os.remove, temp_file)
                     _LOGGER.debug("Removed temporary file: %s", temp_file)
             except Exception as err:
                 _LOGGER.debug("Could not remove temp file %s: %s", temp_file, err)
@@ -471,8 +474,9 @@ class VideoProcessor:
                     "Failed to embed thumbnail: %s", stderr.decode()
                 )
                 # Clean up output file if it exists
-                if os.path.exists(output_video_path):
-                    os.remove(output_video_path)
+                loop = asyncio.get_running_loop()
+                if await loop.run_in_executor(None, os.path.exists, output_video_path):
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 return False
 
             _LOGGER.info("Thumbnail embedded successfully")
@@ -481,9 +485,10 @@ class VideoProcessor:
         except Exception as err:
             _LOGGER.error("Error embedding thumbnail: %s", err)
             # Clean up output file if it exists
-            if os.path.exists(output_video_path):
+            loop = asyncio.get_running_loop()
+            if await loop.run_in_executor(None, os.path.exists, output_video_path):
                 try:
-                    os.remove(output_video_path)
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 except Exception:
                     pass
             return False
@@ -520,7 +525,8 @@ class VideoProcessor:
             )
             # Copy input to output since no processing is needed
             try:
-                shutil.copy2(video_path, output_video_path)
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, shutil.copy2, video_path, output_video_path)
                 return True
             except Exception as err:
                 _LOGGER.error("Failed to copy video file: %s", err)
@@ -574,8 +580,9 @@ class VideoProcessor:
                     "Failed to normalize aspect ratio: %s", stderr.decode()
                 )
                 # Clean up output file if it exists
-                if os.path.exists(output_video_path):
-                    os.remove(output_video_path)
+                loop = asyncio.get_running_loop()
+                if await loop.run_in_executor(None, os.path.exists, output_video_path):
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 return False
 
             _LOGGER.info("Aspect ratio normalized successfully")
@@ -584,9 +591,10 @@ class VideoProcessor:
         except Exception as err:
             _LOGGER.error("Error normalizing aspect ratio: %s", err)
             # Clean up output file if it exists
-            if os.path.exists(output_video_path):
+            loop = asyncio.get_running_loop()
+            if await loop.run_in_executor(None, os.path.exists, output_video_path):
                 try:
-                    os.remove(output_video_path)
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 except Exception:
                     pass
             return False
@@ -640,7 +648,8 @@ class VideoProcessor:
             _LOGGER.debug("Video already has target dimensions")
             # Copy input to output since no processing is needed
             try:
-                shutil.copy2(video_path, output_video_path)
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, shutil.copy2, video_path, output_video_path)
                 return True
             except Exception as err:
                 _LOGGER.error("Failed to copy video file: %s", err)
@@ -676,8 +685,9 @@ class VideoProcessor:
                     "Failed to resize video: %s", stderr.decode()
                 )
                 # Clean up output file if it exists
-                if os.path.exists(output_video_path):
-                    os.remove(output_video_path)
+                loop = asyncio.get_running_loop()
+                if await loop.run_in_executor(None, os.path.exists, output_video_path):
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 return False
 
             _LOGGER.info("Video resized successfully")
@@ -686,9 +696,10 @@ class VideoProcessor:
         except Exception as err:
             _LOGGER.error("Error resizing video: %s", err)
             # Clean up output file if it exists
-            if os.path.exists(output_video_path):
+            loop = asyncio.get_running_loop()
+            if await loop.run_in_executor(None, os.path.exists, output_video_path):
                 try:
-                    os.remove(output_video_path)
+                    await loop.run_in_executor(None, os.remove, output_video_path)
                 except Exception:
                     pass
             return False
@@ -776,7 +787,10 @@ class VideoProcessor:
                 
                 if output_path:
                     # Use specified output directory
-                    os.makedirs(output_path, exist_ok=True)
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(
+                        None, functools.partial(os.makedirs, output_path, exist_ok=True)
+                    )
                     target_dir = output_path
                 else:
                     # Use same directory as input
@@ -851,19 +865,20 @@ class VideoProcessor:
                     results["operations"]["embed_thumbnail"] = False
 
             # Copy/move the final result to the output path
+            loop = asyncio.get_running_loop()
             if current_video != video_path:
                 # We have a processed video
                 if overwrite:
                     # Replace original (moves the file, so it no longer exists as temp)
-                    os.replace(current_video, final_output_path)
+                    await loop.run_in_executor(None, os.replace, current_video, final_output_path)
                 else:
                     # Copy to output path (temp file still exists and needs cleanup)
-                    shutil.copy2(current_video, final_output_path)
+                    await loop.run_in_executor(None, shutil.copy2, current_video, final_output_path)
                     
                 results["output_path"] = final_output_path
             elif not overwrite and final_output_path != video_path:
                 # No processing was done but user wants a copy
-                shutil.copy2(video_path, final_output_path)
+                await loop.run_in_executor(None, shutil.copy2, video_path, final_output_path)
                 results["output_path"] = final_output_path
             else:
                 # No processing and overwrite mode

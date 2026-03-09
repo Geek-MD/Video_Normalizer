@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-03-09
+
+### Fixed
+
+- **Non-blocking I/O in async context**: Resolved Home Assistant event loop warning
+  (`Detected blocking call to open inside the event loop`) triggered by blocking
+  filesystem operations running directly on the HA event loop.
+  - All `shutil.copy2()`, `os.replace()` and `os.remove()` calls inside async methods
+    (`normalize_aspect_ratio`, `resize_video`, `embed_thumbnail`, `process_video`) are
+    now offloaded to a thread-pool executor via `asyncio.get_event_loop().run_in_executor()`.
+  - `os.makedirs()` in `process_video` is likewise offloaded to the executor.
+  - `cleanup_temp_files()` and `cleanup_temp_files_by_video_path()` converted from
+    synchronous to `async` methods; their `os.path.exists()` and `os.remove()` calls
+    are also executor-offloaded.
+  - Updated callers in `__init__.py` to properly `await` both cleanup methods.
+  - All validation checks passing (ruff, mypy, hassfest).
+
 ## [1.0.0] - 2026-02-17
 
 ### Added
