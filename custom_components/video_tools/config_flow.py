@@ -1,4 +1,4 @@
-"""Config flow for Video Normalizer integration."""
+"""Config flow for Video Tools integration."""
 from __future__ import annotations
 
 import logging
@@ -68,13 +68,13 @@ async def detect_downloader_integration(hass: HomeAssistant) -> dict[str, Any] |
     return {"download_dir": download_dir}
 
 
-class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
-    """Handle a config flow for Video Normalizer."""
+class VideoToolsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+    """Handle a config flow for Video Tools."""
 
     VERSION = 1
     
     # Only allow a single config entry
-    # This ensures only one instance of Video Normalizer can be configured
+    # This ensures only one instance of Video Tools can be configured
     # as the service and sensor are global to the integration
     SINGLE_CONFIG_ENTRY = True
 
@@ -114,7 +114,7 @@ class VideoNormalizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # ty
             else:
                 # Create the config entry
                 return self.async_create_entry(
-                    title="Video Normalizer",
+                    title="Video Tools",
                     data={
                         CONF_DOWNLOAD_DIR: download_dir,
                         CONF_TIMEOUT: timeout,

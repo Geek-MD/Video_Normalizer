@@ -1,4 +1,4 @@
-[![Geek-MD - Video Normalizer](https://img.shields.io/static/v1?label=Geek-MD&message=Video%20Normalizer&color=blue&logo=github)](https://github.com/Geek-MD/Video_Normalizer)
+[![Geek-MD - Video Tools](https://img.shields.io/static/v1?label=Geek-MD&message=Video%20Tools&color=blue&logo=github)](https://github.com/Geek-MD/Video_Normalizer)
 [![Stars](https://img.shields.io/github/stars/Geek-MD/Video_Normalizer?style=social)](https://github.com/Geek-MD/Video_Normalizer)
 [![Forks](https://img.shields.io/github/forks/Geek-MD/Video_Normalizer?style=social)](https://github.com/Geek-MD/Video_Normalizer)
 
@@ -10,17 +10,17 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
-<img width="200" height="200" alt="image" src="https://github.com/Geek-MD/Video_Normalizer/blob/main/logo.png?raw=true" />
+<img width="200" height="200" alt="image" src="https://github.com/Geek-MD/Video_Normalizer/blob/main/custom_components/video_tools/brand/logo.png?raw=true" />
 
-# Video Normalizer
+# Video Tools
 
 Home Assistant custom integration that normalizes aspect ratio of videos and provides flexible video processing capabilities.
 
 ## Requirements
 
-This integration **requires** the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured first. Video Normalizer uses Downloader's configuration to automatically detect the download directory where videos are processed.
+This integration **requires** the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured first. Video Tools uses Downloader's configuration to automatically detect the download directory where videos are processed.
 
-> 💡 **Tip:** Since Video Normalizer is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience, including downloading, resizing, deleting, and more.
+> 💡 **Tip:** Since Video Tools is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience, including downloading, resizing, deleting, and more.
 
 ## Installation
 
@@ -38,12 +38,12 @@ This integration **requires** the [Downloader](https://www.home-assistant.io/int
 5. Add the repository URL: `https://github.com/Geek-MD/Video_Normalizer`
 6. Select "Integration" as the category
 7. Click "Add"
-8. Search for "Video Normalizer" in HACS
+8. Search for "Video Tools" in HACS
 9. Click "Download"
 10. Restart Home Assistant
 11. Go to Settings > Devices & Services
 12. Click the + button to add a new integration
-13. Search for "Video Normalizer"
+13. Search for "Video Tools"
 14. Follow the configuration steps
 
 ### Manual Installation
@@ -54,20 +54,20 @@ This integration **requires** the [Downloader](https://www.home-assistant.io/int
    - Search for "Downloader" and install it
    - Configure the download directory
 
-2. Copy the `custom_components/video_normalizer` directory to your Home Assistant `custom_components` directory
+2. Copy the `custom_components/video_tools` directory to your Home Assistant `custom_components` directory
 3. Restart Home Assistant
 4. Go to Settings > Devices & Services
 5. Click the + button to add a new integration
-6. Search for "Video Normalizer"
+6. Search for "Video Tools"
 7. Follow the configuration steps
 
 **Note:** The setup wizard will automatically detect and use the download directory configured in your Downloader integration.
 
 ## Configuration
 
-**Note:** Video Normalizer can only be configured once per Home Assistant instance. This ensures proper service and sensor management.
+**Note:** Video Tools can only be configured once per Home Assistant instance. This ensures proper service and sensor management.
 
-**Prerequisite:** The Downloader integration must be installed and configured before setting up Video Normalizer.
+**Prerequisite:** The Downloader integration must be installed and configured before setting up Video Tools.
 
 During setup, you'll need to configure:
 - **Download directory**: Where videos to be processed are located. This field will be automatically pre-filled from your Downloader integration configuration.
@@ -95,7 +95,7 @@ During setup, you'll need to configure:
 
 ## Services
 
-### video_normalizer.normalize_video
+### video_tools.normalize_video
 
 Process a video file with normalization operations.
 
@@ -124,7 +124,7 @@ automation:
       - condition: template
         value_template: "{{ trigger.event.data.file.endswith(('.mp4', '.avi', '.mov', '.mkv')) }}"
     action:
-      - service: video_normalizer.normalize_video
+      - service: video_tools.normalize_video
         data:
           input_file_path: "{{ trigger.event.data.path }}"
           output_file_path: "{{ trigger.event.data.path | replace('.mp4', '_normalized.mp4') }}"
@@ -136,7 +136,7 @@ automation:
 
 ### Status Sensor
 
-The integration provides a status sensor (`sensor.video_normalizer_status`) that tracks the processing state:
+The integration provides a status sensor (`sensor.video_tools_status`) that tracks the processing state:
 
 - **States:**
   - `working`: Currently processing a video
@@ -154,7 +154,7 @@ automation:
   - alias: "Notify when video processing completes"
     trigger:
       - platform: state
-        entity_id: sensor.video_normalizer_status
+        entity_id: sensor.video_tools_status
         from: "working"
         to: "idle"
     action:
@@ -162,21 +162,21 @@ automation:
         data:
           title: "Video Processing Complete"
           message: >
-            Result: {{ state_attr('sensor.video_normalizer_status', 'last_job') }}
-            Processes: {{ state_attr('sensor.video_normalizer_status', 'processes') | join(', ') }}
+            Result: {{ state_attr('sensor.video_tools_status', 'last_job') }}
+            Processes: {{ state_attr('sensor.video_tools_status', 'processes') | join(', ') }}
 ```
 
 ## Events
 
 The service fires a single event that can be used in automations:
-- `video_normalizer_video_processing_finished`: Fired when video processing completes, regardless of the result. The result is available in the event data under the `result` field, which can be `success`, `skipped`, or `failed`. Additional information about the processing is available in the sensor state attributes.
+- `video_tools_video_processing_finished`: Fired when video processing completes, regardless of the result. The result is available in the event data under the `result` field, which can be `success`, `skipped`, or `failed`. Additional information about the processing is available in the sensor state attributes.
 
 ## Service Lifecycle
 
-When the `video_normalizer.normalize_video` service is called, it follows a specific lifecycle to ensure proper operation and state management:
+When the `video_tools.normalize_video` service is called, it follows a specific lifecycle to ensure proper operation and state management:
 
 1. **Process Video**: The video is processed according to the specified parameters (resize, normalize aspect ratio, generate thumbnail, etc.)
-2. **Fire Event**: A Home Assistant event (`video_normalizer_video_processing_finished`) is fired to notify automations of the processing completion. The event includes a `result` field with the value `success`, `skipped`, or `failed`
+2. **Fire Event**: A Home Assistant event (`video_tools_video_processing_finished`) is fired to notify automations of the processing completion. The event includes a `result` field with the value `success`, `skipped`, or `failed`
 3. **Update Sensor**: The status sensor is updated to `idle` state with the appropriate result (`success`, `skipped`, or `failed`)
 4. **Cleanup**: Temporary files created during processing are removed
 
@@ -192,7 +192,7 @@ automation:
   - alias: "Process video and send notification"
     trigger:
       - platform: event
-        event_type: video_normalizer_video_processing_finished
+        event_type: video_tools_video_processing_finished
     condition:
       - condition: template
         value_template: "{{ trigger.event.data.result == 'success' }}"
@@ -206,7 +206,7 @@ automation:
   - alias: "Handle video processing failures"
     trigger:
       - platform: event
-        event_type: video_normalizer_video_processing_finished
+        event_type: video_tools_video_processing_finished
     condition:
       - condition: template
         value_template: "{{ trigger.event.data.result == 'failed' }}"
@@ -219,14 +219,14 @@ automation:
   - alias: "Monitor sensor state change"
     trigger:
       - platform: state
-        entity_id: sensor.video_normalizer_status
+        entity_id: sensor.video_tools_status
         to: "idle"
     action:
       # This action runs after the event has been fired
       - service: notify.mobile_app
         data:
-          title: "Video Normalizer Idle"
-          message: "Status: {{ state_attr('sensor.video_normalizer_status', 'last_job') }}"
+          title: "Video Tools Idle"
+          message: "Status: {{ state_attr('sensor.video_tools_status', 'last_job') }}"
 ```
 
 ## Requirements
@@ -235,7 +235,7 @@ This integration requires:
 - FFmpeg to be available in the Home Assistant environment (typically pre-installed)
 - The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration (required for auto-detection of the download directory)
 
-> 💡 **Tip:** Since Video Normalizer is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience.
+> 💡 **Tip:** Since Video Tools is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience.
 
 ---
 
