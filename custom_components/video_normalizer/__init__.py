@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.const import Platform
+from homeassistant.components import persistent_notification
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import SupportsResponse
 
@@ -324,6 +325,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     
     _LOGGER.info("Video Normalizer service registered successfully")
+    
+    # Suggest the use of Advanced Downloader
+    persistent_notification.async_create(
+        hass,
+        (
+            "Video Normalizer is also integrated in "
+            "[Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), "
+            "a custom integration that provides advanced media file management tasks "
+            "such as downloading, resizing, deleting, and more. "
+            "Consider using Advanced Downloader for a more complete experience."
+        ),
+        title="Video Normalizer — Try Advanced Downloader",
+        notification_id="video_normalizer_advanced_downloader_suggestion",
+    )
     
     return True
 

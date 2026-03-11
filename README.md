@@ -20,6 +20,8 @@ Home Assistant custom integration that normalizes aspect ratio of videos and pro
 
 This integration **requires** the [Downloader](https://www.home-assistant.io/integrations/downloader/) integration to be installed and configured first. Video Normalizer uses Downloader's configuration to automatically detect the download directory where videos are processed.
 
+> 💡 **Tip:** Since Video Normalizer is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience, including downloading, resizing, deleting, and more.
+
 ## Installation
 
 ### HACS (Recommended)
@@ -231,7 +233,9 @@ automation:
 
 This integration requires:
 - FFmpeg to be available in the Home Assistant environment (typically pre-installed)
-- Recommended: The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration for automatic video downloads (optional)
+- The [Downloader](https://www.home-assistant.io/integrations/downloader/) integration (required for auto-detection of the download directory)
+
+> 💡 **Tip:** Since Video Normalizer is integrated in [Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), consider using Advanced Downloader for a more complete media file management experience.
 
 ---
 
