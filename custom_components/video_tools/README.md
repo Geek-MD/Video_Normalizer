@@ -1,8 +1,8 @@
-# Video Normalizer Integration
+# Video Tools Integration
 
 ## Overview
 
-Video Normalizer is a custom integration for Home Assistant that provides automatic video normalization services including aspect ratio correction, thumbnail generation, and optional resizing for downloaded content.
+Video Tools is a custom integration for Home Assistant that provides automatic video normalization services including aspect ratio correction, thumbnail generation, and optional resizing for downloaded content.
 
 ## Features
 
@@ -79,7 +79,7 @@ All operations use temporary files and atomic replacements to prevent data loss.
 
 The integration fires a single automation-friendly event:
 
-**video_normalizer_video_processing_finished:**
+**video_tools_video_processing_finished:**
 
 This event is fired regardless of the processing result. The `result` field indicates the outcome.
 
@@ -158,7 +158,7 @@ The video processor implements robust error handling:
 ### File Structure
 
 ```
-custom_components/video_normalizer/
+custom_components/video_tools/
 ├── __init__.py           # Integration setup, service registration
 ├── video_processor.py    # Video processing logic
 ├── config_flow.py        # Configuration flow with Downloader validation
@@ -176,13 +176,13 @@ To test the integration:
 
 1. Ensure Home Assistant is running
 2. Install and configure the Downloader integration first
-3. Add the Video Normalizer integration through the UI
+3. Add the Video Tools integration through the UI
 4. Verify it correctly detects Downloader and uses its directory
-5. Call the `video_normalizer.normalize_video` service with a test video
+5. Call the `video_tools.normalize_video` service with a test video
 
 To test error scenarios:
 
-1. Try adding Video Normalizer without Downloader installed
+1. Try adding Video Tools without Downloader installed
 2. Verify the error message is displayed correctly
 3. Install Downloader and retry
 
@@ -202,22 +202,22 @@ automation:
         value_template: >
           {{ trigger.event.data.file.endswith(('.mp4', '.avi', '.mov', '.mkv')) }}
     action:
-      - service: video_normalizer.normalize_video
+      - service: video_tools.normalize_video
         data:
           video_path: "{{ trigger.event.data.path }}"
           normalize_aspect: true
           generate_thumbnail: true
       - wait_for_trigger:
           - platform: event
-            event_type: video_normalizer_video_processing_success
+            event_type: video_tools_video_processing_success
           - platform: event
-            event_type: video_normalizer_video_processing_failed
+            event_type: video_tools_video_processing_failed
         timeout: "00:10:00"
       - choose:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ wait.trigger.event.event_type == 'video_normalizer_video_processing_success' }}
+                  {{ wait.trigger.event.event_type == 'video_tools_video_processing_success' }}
             sequence:
               - service: notify.telegram
                 data:
@@ -225,7 +225,7 @@ automation:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ wait.trigger.event.event_type == 'video_normalizer_video_processing_failed' }}
+                  {{ wait.trigger.event.event_type == 'video_tools_video_processing_failed' }}
             sequence:
               - service: notify.telegram
                 data:

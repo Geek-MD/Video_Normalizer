@@ -1,6 +1,6 @@
 {
-  "domain": "video_normalizer",
-  "name": "Video Normalizer",
+  "domain": "video_tools",
+  "name": "Video Tools",
   "codeowners": ["@Geek-MD"],
   "config_flow": true,
   "dependencies": ["downloader"],
@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Geek-MD/Video_Normalizer/issues",
   "requirements": [],
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

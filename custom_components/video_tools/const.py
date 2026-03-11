@@ -1,6 +1,6 @@
-"""Constants for the Video Normalizer integration."""
+"""Constants for the Video Tools integration."""
 
-DOMAIN = "video_normalizer"
+DOMAIN = "video_tools"
 DOWNLOADER_DOMAIN = "downloader"
 CONF_DOWNLOAD_DIR = "download_dir"
 CONF_TIMEOUT = "timeout"

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-03-11
+
+### Changed
+
+- **Rebranding**: Renamed integration from "Video Normalizer" to "Video Tools" across
+  all user-visible strings, log messages, and configuration titles.
+- **Domain**: Changed integration domain from `video_normalizer` to `video_tools`.
+  All service calls, sensor entities, and automation events now use the `video_tools`
+  prefix (e.g. `video_tools.normalize_video`, `sensor.video_tools_status`,
+  `video_tools_video_processing_finished`).
+- **Brand assets**: Moved `icon.png`, `icon@2x.png`, `logo.png`, and `logo@2x.png`
+  into `custom_components/video_tools/brand/` following HACS brand conventions.
+
 ## [1.0.3] - 2026-03-11
 
 ### Changed

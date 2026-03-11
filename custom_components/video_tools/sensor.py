@@ -1,4 +1,4 @@
-"""Sensor platform for Video Normalizer integration."""
+"""Sensor platform for Video Tools integration."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -24,8 +24,8 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Video Normalizer sensor."""
-    _LOGGER.info("Setting up Video Normalizer sensor")
+    """Set up the Video Tools sensor."""
+    _LOGGER.info("Setting up Video Tools sensor")
     
     sensor = VideoNormalizerSensor(entry)
     async_add_entities([sensor], True)
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class VideoNormalizerSensor(SensorEntity):
-    """Sensor to track Video Normalizer service status."""
+    """Sensor to track Video Tools service status."""
 
     _attr_has_entity_name = True
     _attr_name = "Status"
@@ -53,7 +53,7 @@ class VideoNormalizerSensor(SensorEntity):
         # Add device info for proper organization in HA
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="Video Normalizer",
+            name="Video Tools",
             manufacturer="Geek-MD",
             model="Video Processor",
             entry_type=DeviceEntryType.SERVICE,
@@ -73,7 +73,7 @@ class VideoNormalizerSensor(SensorEntity):
         self._attr_extra_state_attributes["timestamp"] = datetime.now().isoformat()
         self._attr_extra_state_attributes["processes"] = []
         self.async_write_ha_state()
-        _LOGGER.info("Video Normalizer sensor state: working")
+        _LOGGER.info("Video Tools sensor state: working")
 
     @callback
     def set_idle(
@@ -93,7 +93,7 @@ class VideoNormalizerSensor(SensorEntity):
         self._attr_extra_state_attributes["processes"] = processes or []
         self.async_write_ha_state()
         _LOGGER.info(
-            "Video Normalizer sensor state: idle (result: %s, processes: %s)",
+            "Video Tools sensor state: idle (result: %s, processes: %s)",
             job_result, processes
         )
 

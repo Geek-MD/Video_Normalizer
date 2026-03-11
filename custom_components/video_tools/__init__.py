@@ -1,4 +1,4 @@
-"""The Video Normalizer integration."""
+"""The Video Tools integration."""
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +21,7 @@ from .video_processor import VideoProcessor
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "video_normalizer"
+DOMAIN = "video_tools"
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 # Service constants
@@ -60,8 +60,8 @@ SERVICE_NORMALIZE_VIDEO_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Video Normalizer from a config entry."""
-    _LOGGER.info("Setting up Video Normalizer integration")
+    """Set up Video Tools from a config entry."""
+    _LOGGER.info("Setting up Video Tools integration")
     
     # Store the download directory and timeout from config
     hass.data.setdefault(DOMAIN, {})
@@ -324,20 +324,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         supports_response=SupportsResponse.OPTIONAL,
     )
     
-    _LOGGER.info("Video Normalizer service registered successfully")
+    _LOGGER.info("Video Tools service registered successfully")
     
     # Suggest the use of Advanced Downloader
     persistent_notification.async_create(
         hass,
         (
-            "Video Normalizer is also integrated in "
+            "Video Tools is also integrated in "
             "[Advanced Downloader](https://github.com/Geek-MD/Advanced_Downloader), "
             "a custom integration that provides advanced media file management tasks "
             "such as downloading, resizing, deleting, and more. "
             "Consider using Advanced Downloader for a more complete experience."
         ),
-        title="Video Normalizer — Try Advanced Downloader",
-        notification_id="video_normalizer_advanced_downloader_suggestion",
+        title="Video Tools — Try Advanced Downloader",
+        notification_id="video_tools_advanced_downloader_suggestion",
     )
     
     return True
@@ -345,7 +345,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.info("Unloading Video Normalizer integration")
+    _LOGGER.info("Unloading Video Tools integration")
     
     # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

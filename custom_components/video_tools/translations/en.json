@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Video Normalizer - Welcome",
-        "description": "**Recommendation:** To get the most out of this integration, it is recommended to have the **Downloader** integration installed ({has_downloader} Installed).\n\nDownloader allows automatic file downloads, which complements perfectly with Video Normalizer to process downloaded videos.\n\nYou can install Downloader from: {downloader_url}\n\nPress **Submit** to continue with the configuration.",
+        "title": "Video Tools - Welcome",
+        "description": "**Recommendation:** To get the most out of this integration, it is recommended to have the **Downloader** integration installed ({has_downloader} Installed).\n\nDownloader allows automatic file downloads, which complements perfectly with Video Tools to process downloaded videos.\n\nYou can install Downloader from: {downloader_url}\n\nPress **Submit** to continue with the configuration.",
         "data": {}
       },
       "configure": {
-        "title": "Configuration - Video Normalizer",
+        "title": "Configuration - Video Tools",
         "description": "Configure the download directory where videos to be processed are located.\n\nThe directory has been automatically detected from your Downloader integration configuration.",
         "data": {
           "download_dir": "Download Directory",
@@ -20,7 +20,7 @@
       "unknown": "Unexpected error occurred. Please check the logs for more information."
     },
     "abort": {
-      "already_configured": "Video Normalizer is already configured",
+      "already_configured": "Video Tools is already configured",
       "downloader_required": "The Downloader integration is required but not installed. Please install it first from: {downloader_url}"
     }
   },

@@ -1,4 +1,4 @@
-"""Video processing functionality for Video Normalizer integration."""
+"""Video processing functionality for Video Tools integration."""
 from __future__ import annotations
 
 import asyncio
